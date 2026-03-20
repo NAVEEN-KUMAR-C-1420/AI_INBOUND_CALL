@@ -637,6 +637,92 @@ def _detect_out_of_scope_handoff_request(user_text: str) -> List[str]:
     return [p for p in phrases if p in text]
 
 
+def _detect_non_banking_topic(user_text: str) -> Optional[str]:
+    """Detect obvious out-of-domain topics and return a compact topic label."""
+    client_id = (get_client_id() or "").lower()
+    if client_id not in ["banking", "telecorp"]:
+        return None
+
+    text = (user_text or "").lower()
+    topic_keywords: dict[str, List[str]] = {
+        "weather": [
+            "weather", "temperature", "rain", "climate", "forecast", "sunny", "hot", "cold",
+            "வானிலை", "மழை", "வெயில்", "சூடு", "kulir", "mazhai", "veyil", "weather details",
+        ],
+        "sports": [
+            "cricket", "football", "ipl", "match score", "score", "sports",
+            "விளையாட்டு", "கிரிக்கெட்", "score enna", "match enna aachu",
+        ],
+        "news": [
+            "news", "headlines", "current affairs", "breaking", "செய்தி", "news update", "latest news",
+        ],
+        "entertainment": [
+            "movie", "cinema", "song", "actor", "actress", "ott", "படம்", "பாட்டு", "cinema update",
+        ],
+        "travel": [
+            "flight", "train", "bus", "hotel", "trip", "tour", "பயணம்", "ticket", "travel plan",
+        ],
+    }
+    for topic, words in topic_keywords.items():
+        if any(w in text for w in words):
+            return topic
+    return None
+
+
+def _non_banking_structured_response(topic: str, user_text: str) -> str:
+    topic_text = (topic or "non-banking").replace("_", " ")
+    text = (user_text or "").lower()
+    client_id = (get_client_id() or "").lower()
+    has_tamil_script = bool(re.search(r"[\u0B80-\u0BFF]", user_text or ""))
+    tanglish_markers = ["enna", "epdi", "eppadi", "sollu", "iruka", "venum", "update pannunga"]
+    is_tanglish = any(m in text for m in tanglish_markers)
+
+    if client_id == "telecorp":
+        if has_tamil_script:
+            return (
+                "நான் Sarah, TeleCorp support க்கான AI bot. "
+                f"{topic_text} போன்ற telecom அல்லாத விவரங்களை நான் கையாள முடியாது. "
+                "Plan details, bill amount, outstanding balance, data usage, network issue, recharge, SIM, roaming போன்ற telecom கேள்விகளுக்கு நான் உதவுவேன். "
+                "தயவு செய்து telecom சம்பந்தமான கேள்வியை கேளுங்கள்."
+            )
+
+        if is_tanglish:
+            return (
+                "Naan Sarah, TeleCorp support-ku AI bot. "
+                f"{topic_text} details madhiri non-telecom topics handle panna mudiyadhu. "
+                "Neenga plan, bill amount, balance due, data usage, network issue, recharge, SIM, roaming pathi kelunga, naan immediate ah help panren."
+            )
+
+        return (
+            "I am Sarah, an AI bot for TeleCorp support. "
+            f"I cannot handle {topic_text} details. "
+            "You can ask me telecom questions like plan details, bill amount, outstanding balance, data usage, network issues, recharge, SIM, and roaming. "
+            "Please ask your telecom-related question, and I will help right away."
+        )
+
+    if has_tamil_script:
+        return (
+            "நான் Sarah, Banking support க்கான AI bot. "
+            f"{topic_text} போன்ற banking அல்லாத விவரங்களை நான் கையாள முடியாது. "
+            "Account details, balance, loans, transactions, cards, KYC, branch support போன்ற banking கேள்விகளுக்கு நான் உதவுவேன். "
+            "தயவு செய்து banking சம்பந்தமான கேள்வியை கேளுங்கள்."
+        )
+
+    if is_tanglish:
+        return (
+            "Naan Sarah, banking support-ku AI bot. "
+            f"{topic_text} details madhiri non-banking topics handle panna mudiyadhu. "
+            "Neenga account, balance, loan, transaction, card, KYC, branch support pathi kelunga, naan immediate ah help panren."
+        )
+
+    return (
+        "I am Sarah, an AI bot for banking support. "
+        f"I cannot handle {topic_text} details. "
+        "You can ask me banking questions like account details, loan information, balance, transactions, cards, KYC, and branch support. "
+        "Please ask your banking-related question, and I will help right away."
+    )
+
+
 def _is_question_like(text: str) -> bool:
     t = (text or "").lower().strip()
     if not t:
@@ -1126,45 +1212,62 @@ async def send_message(call_id: int, request: MessageRequest, db: Session = Depe
 
     runtime_customer = cast(dict[str, Any], context.get("customer_profile") or customer_profile)
     ai_result: dict[str, Any] = {}
+    non_banking_handled = False
 
-    direct_result = _direct_db_response(request.message, runtime_customer)
-    if direct_result:
-        ai_text = str(direct_result.get("response") or "").strip()
-        intent = str(direct_result.get("intent") or detect_intent(request.message))
+    non_banking_topic = _detect_non_banking_topic(request.message)
+    if non_banking_topic:
+        ai_text = _non_banking_structured_response(non_banking_topic, request.message)
+        intent = "non_banking_query"
+        sentiment = "neutral"
+        urgency = "low"
+        non_banking_handled = True
+        direct_result = None
     else:
-        ai_result = await get_contextual_ai_response(
-            current_input=request.message,
-            conversation_history=list(context["history"]),
-            state=context["state"],
-            customer_info=runtime_customer,
-            memory=list(call_cache.get("memory_lines") or []),
-        )
-        ai_text = str(ai_result.get("response", "") or "").strip()
-        if not ai_text:
-            ai_text = _fallback_live_response(cast(str, call.customer.name), request.message)
-        intent = ai_result.get("intent") or detect_intent(request.message)
+        direct_result = _direct_db_response(request.message, runtime_customer)
+        if direct_result:
+            ai_text = str(direct_result.get("response") or "").strip()
+            intent = str(direct_result.get("intent") or detect_intent(request.message))
+        else:
+            ai_result = await get_contextual_ai_response(
+                current_input=request.message,
+                conversation_history=list(context["history"]),
+                state=context["state"],
+                customer_info=runtime_customer,
+                memory=list(call_cache.get("memory_lines") or []),
+            )
+            ai_text = str(ai_result.get("response", "") or "").strip()
+            if not ai_text:
+                ai_text = _fallback_live_response(cast(str, call.customer.name), request.message)
+            intent = ai_result.get("intent") or detect_intent(request.message)
 
     # Keep deterministic safety rules in backend.
-    sentiment = ai_result.get("sentiment") or detect_sentiment(request.message)
-    urgency = (ai_result.get("urgency") if not direct_result else None) or detect_urgency(request.message, sentiment)
+    if not non_banking_handled:
+        sentiment = ai_result.get("sentiment") or detect_sentiment(request.message)
+        urgency = (ai_result.get("urgency") if not direct_result else None) or detect_urgency(request.message, sentiment)
 
-    if "frustrated" in (request.message or "").lower():
-        sentiment = "frustrated"
-    if any(w in (request.message or "").lower() for w in ["angry", "worst", "urgent"]):
-        urgency = "high"
+        if "frustrated" in (request.message or "").lower():
+            sentiment = "frustrated"
+        if any(w in (request.message or "").lower() for w in ["angry", "worst", "urgent"]):
+            urgency = "high"
 
-    handoff_phrases = _detect_human_handoff_request(request.message)
-    handoff_requested = len(handoff_phrases) > 0
-    out_of_scope_phrases = _detect_out_of_scope_handoff_request(request.message)
-    out_of_scope_requested = len(out_of_scope_phrases) > 0
-    ai_confidence = int(ai_result.get("confidence") or 60)
-    unresolved_requested = _should_escalate_unanswerable(
-        user_text=request.message,
-        ai_text=ai_text,
-        intent=str(intent),
-        direct_db_answered=bool(direct_result),
-        ai_confidence=ai_confidence,
-    )
+        handoff_phrases = _detect_human_handoff_request(request.message)
+        handoff_requested = len(handoff_phrases) > 0
+        out_of_scope_phrases = _detect_out_of_scope_handoff_request(request.message)
+        out_of_scope_requested = len(out_of_scope_phrases) > 0
+        ai_confidence = int(ai_result.get("confidence") or 60)
+        unresolved_requested = _should_escalate_unanswerable(
+            user_text=request.message,
+            ai_text=ai_text,
+            intent=str(intent),
+            direct_db_answered=bool(direct_result),
+            ai_confidence=ai_confidence,
+        )
+    else:
+        handoff_phrases = []
+        handoff_requested = False
+        out_of_scope_phrases = []
+        out_of_scope_requested = False
+        unresolved_requested = False
 
     unresolved_phrases = ["unanswerable_or_out_of_db_query"] if unresolved_requested else []
 

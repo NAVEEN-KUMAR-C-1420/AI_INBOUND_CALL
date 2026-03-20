@@ -7,10 +7,10 @@ import {
   Memory,
   MessageResponse,
   Summary,
-} from './services/api';
-import { IntelligencePanel } from './components/IntelligencePanel';
-import { HumanTakeoverPanel } from './components/HumanTakeoverPanel';
-import { useSpeechRecognition, useTextToSpeech } from './hooks/useSpeech';
+} from '../services/api';
+import { IntelligencePanel } from '../components/IntelligencePanel';
+import { HumanTakeoverPanel } from '../components/HumanTakeoverPanel';
+import { useSpeechRecognition, useTextToSpeech } from '../hooks/useSpeech';
 
 type CallState = 'idle' | 'ringing' | 'active' | 'ended';
 
@@ -21,10 +21,7 @@ interface TranscriptItem {
   sentiment?: string;
 }
 
-type NavPage = 'dashboard' | 'inbound' | 'outbound' | 'analytics';
-type AuthPage = 'home' | 'login' | 'signup';
-
-function App() {
+function InboundCallsPage() {
   const [callKey, setCallKey] = useState(0);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -54,9 +51,6 @@ function App() {
   const [dialPhone, setDialPhone] = useState('');
   const [dialName, setDialName] = useState('');
   const [isDialing, setIsDialing] = useState(false);
-  const [currentPage, setCurrentPage] = useState<NavPage>('inbound');
-  const [authPage, setAuthPage] = useState<AuthPage>('home');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const buildFallbackSuggestions = useCallback((aiText: string, sentiment: string) => {
     const base = (aiText || '').trim();
@@ -537,366 +531,12 @@ function App() {
     return 'sentiment-neutral';
   };
 
-  const pageMeta: Record<NavPage, { title: string; subtitle: string }> = {
-    dashboard: {
-      title: 'Dashboard',
-      subtitle: 'Unified operations view across MIC and call workflows',
-    },
-    inbound: {
-      title: 'Inbound Calls',
-      subtitle: 'Receive and manage incoming customer calls',
-    },
-    outbound: {
-      title: 'Outbound Calls',
-      subtitle: 'Campaign and dialer operations in the same unified website',
-    },
-    analytics: {
-      title: 'Analytics',
-      subtitle: 'Performance and call intelligence insights',
-    },
-  };
-
-  const renderNonInboundPage = () => {
-    if (currentPage === 'dashboard') {
-      const activeCalls = callState === 'active' ? 1 : 0;
-      const inboundToday = customerCalls.length;
-      const outboundToday = Math.max(3, Math.floor(customers.length * 1.2));
-      return (
-        <section className="dashboard-zone">
-          <div className="dashboard-hero-card">
-            <div>
-              <h3>Call Center Dashboard</h3>
-              <p>Monitor and manage your inbound and outbound calls</p>
-            </div>
-            <div className="dashboard-online-pill">System Online</div>
-          </div>
-
-          <div className="dashboard-metrics-grid">
-            <div className="dashboard-metric-card red-icon">
-              <div className="metric-head">Active Calls</div>
-              <div className="metric-value">{activeCalls}</div>
-              <div className="metric-sub">Currently in progress</div>
-            </div>
-            <div className="dashboard-metric-card">
-              <div className="metric-head">Inbound Today</div>
-              <div className="metric-value">{inboundToday}</div>
-              <div className="metric-sub trend">+12% vs yesterday</div>
-            </div>
-            <div className="dashboard-metric-card">
-              <div className="metric-head">Outbound Today</div>
-              <div className="metric-value">{outboundToday}</div>
-              <div className="metric-sub trend">+8% vs yesterday</div>
-            </div>
-            <div className="dashboard-metric-card red-icon">
-              <div className="metric-head">Avg Duration</div>
-              <div className="metric-value">6:46</div>
-              <div className="metric-sub">Minutes per call</div>
-            </div>
-          </div>
-
-          <div className="dashboard-bottom-grid">
-            <div className="dashboard-panel-card">
-              <div className="panel-title-row">
-                <h4>Call Activity</h4>
-                <button className="mini-action" onClick={() => setCurrentPage('inbound')}>Open Inbound</button>
-              </div>
-              <p>Live activity stream and call controls are available in the inbound module.</p>
-              <div className="quick-action-row">
-                <button className="theme-cta" onClick={() => setCurrentPage('inbound')}>Receive</button>
-                <button className="theme-cta muted" onClick={() => setCurrentPage('outbound')}>Call Out</button>
-              </div>
-            </div>
-
-            <div className="dashboard-panel-card">
-              <div className="panel-title-row">
-                <h4>Today Summary</h4>
-                <span className={`summary-badge ${isConnected ? 'badge-resolved' : 'badge-unresolved'}`}>
-                  {isConnected ? 'Connected' : 'Disconnected'}
-                </span>
-              </div>
-              <p>Customer records loaded: {customers.length}</p>
-              <p>Client mode: {clientName}</p>
-              <p>Current call state: {callState}</p>
-            </div>
-          </div>
-        </section>
-      );
-    }
-
-    if (currentPage === 'outbound') {
-      return (
-        <section className="theme-page-panel">
-          <div className="theme-section-head">
-            <h3>Outbound Calls</h3>
-            <p>Dialer and campaign style aligned with the same frontend design language.</p>
-          </div>
-          <div className="theme-placeholder-grid">
-            <div className="theme-placeholder-card">
-              <div className="kpi-label">Quick Dial</div>
-              <div className="kpi-value">+91 98765 43210</div>
-              <p>Manual dial and start outbound session.</p>
-            </div>
-            <div className="theme-placeholder-card">
-              <div className="kpi-label">Campaigns</div>
-              <div className="kpi-value">3 Running</div>
-              <p>Retention, collections, and renewal batches.</p>
-            </div>
-            <div className="theme-placeholder-card">
-              <div className="kpi-label">Completion Rate</div>
-              <div className="kpi-value">82%</div>
-              <p>Answered and completed call ratio today.</p>
-            </div>
-          </div>
-        </section>
-      );
-    }
-
-    return (
-      <section className="theme-page-panel">
-        <div className="theme-section-head">
-          <h3>Analytics</h3>
-          <p>Performance cards and insights in the same style as your frontend templates.</p>
-        </div>
-        <div className="theme-placeholder-grid">
-          <div className="theme-placeholder-card">
-            <div className="kpi-label">Call Volume</div>
-            <div className="kpi-value">128</div>
-            <p>Inbound and outbound totals for current window.</p>
-          </div>
-          <div className="theme-placeholder-card">
-            <div className="kpi-label">Sentiment Mix</div>
-            <div className="kpi-value">68% Positive</div>
-            <p>Customer sentiment distribution across conversations.</p>
-          </div>
-          <div className="theme-placeholder-card">
-            <div className="kpi-label">Resolution Rate</div>
-            <div className="kpi-value">91%</div>
-            <p>Resolved vs unresolved outcome quality metric.</p>
-          </div>
-        </div>
-      </section>
-    );
-  };
-
-  if (!isAuthenticated) {
-    return (
-      <div className={`auth-root ${authPage === 'home' ? 'home-mode' : 'form-mode'}`}>
-        <div className="auth-glow"></div>
-        {authPage === 'home' && (
-          <div className="landing-wrap">
-            <header className="landing-nav">
-              <div className="theme-brand">
-                <div className="theme-brand-icon">M</div>
-                <div>
-                  <div className="theme-brand-title">MIC</div>
-                  <div className="theme-brand-sub">Call Center Management</div>
-                </div>
-              </div>
-              <div className={`theme-pill landing-status ${isConnected ? 'ok' : 'bad'}`}>
-                {isConnected ? 'System Ready' : 'Connection Error'}
-              </div>
-            </header>
-
-            <section className="landing-hero">
-              <div className="landing-hero-main">
-                <h1>Transform Your Call Center Operations</h1>
-                <p>
-                  Streamline inbound and outbound calls with our advanced call center platform.
-                  Boost productivity, improve customer satisfaction, and scale your operations.
-                </p>
-                <div className="auth-actions">
-                  <button className="theme-cta" onClick={() => setAuthPage('signup')}>Start Free Trial</button>
-                  <button className="theme-cta muted" onClick={() => setAuthPage('login')}>Login</button>
-                </div>
-              </div>
-
-              <div className="landing-hero-side">
-                <div className="theme-kpi-card">
-                  <div className="kpi-label">Current Client</div>
-                  <div className="kpi-value">{clientName}</div>
-                </div>
-                <div className="theme-kpi-card">
-                  <div className="kpi-label">Active Users</div>
-                  <div className="kpi-value">10K+</div>
-                </div>
-                <div className="theme-kpi-card">
-                  <div className="kpi-label">Uptime</div>
-                  <div className="kpi-value">99.9%</div>
-                </div>
-              </div>
-            </section>
-
-            <section className="landing-grid">
-              <article className="landing-card">
-                <h3>50M+ Calls Handled</h3>
-                <p>Production-ready platform performance across inbound and outbound operations.</p>
-              </article>
-              <article className="landing-card">
-                <h3>24/7 Support</h3>
-                <p>Always-on support and monitoring for uninterrupted call-center service.</p>
-              </article>
-              <article className="landing-card">
-                <h3>Unified Website</h3>
-                <p>Home, Login, Dashboard, Inbound, Outbound, and Analytics in a single experience.</p>
-              </article>
-            </section>
-
-            <section className="landing-footer-cta">
-              <h2>Start with Home, continue with Login, then access full operations.</h2>
-              <button className="theme-cta" onClick={() => setAuthPage('login')}>Enter Platform</button>
-            </section>
-
-            <section className="landing-section about-block">
-              <div>
-                <h2>About CallCenter Pro</h2>
-                <p>
-                  We are revolutionizing call center operations with technology and intuitive design.
-                  Our platform helps teams handle interactions efficiently, reduce wait times,
-                  and deliver better customer experiences.
-                </p>
-              </div>
-              <div className="landing-mini-stats">
-                <div className="landing-mini-card">
-                  <span>500+</span>
-                  <small>Companies Trust Us</small>
-                </div>
-                <div className="landing-mini-card">
-                  <span>95%</span>
-                  <small>Customer Satisfaction</small>
-                </div>
-                <div className="landing-mini-card">
-                  <span>Global</span>
-                  <small>Multi-region Operations</small>
-                </div>
-              </div>
-            </section>
-
-            <section className="landing-section feature-block">
-              <h2>Core Features</h2>
-              <div className="feature-grid">
-                <article className="feature-item">
-                  <h4>Intelligent Call Routing</h4>
-                  <p>Automatically route calls to the most qualified agents based on needs and availability.</p>
-                </article>
-                <article className="feature-item">
-                  <h4>Real-time Analytics</h4>
-                  <p>Monitor call volumes, agent performance, and customer satisfaction with live dashboards.</p>
-                </article>
-                <article className="feature-item">
-                  <h4>Team Management</h4>
-                  <p>Manage schedules, performance, and quality workflows for call-center teams.</p>
-                </article>
-                <article className="feature-item">
-                  <h4>Enterprise Security</h4>
-                  <p>Bank-grade controls, secure operations, and scalable architecture support.</p>
-                </article>
-              </div>
-            </section>
-
-            <section className="landing-section pricing-block">
-              <h2>Plans</h2>
-              <div className="pricing-grid">
-                <article className="pricing-card">
-                  <h4>Starter</h4>
-                  <p className="price">$99/mo</p>
-                  <ul>
-                    <li>Inbound calls</li>
-                    <li>Basic analytics</li>
-                    <li>Email support</li>
-                  </ul>
-                </article>
-                <article className="pricing-card featured">
-                  <h4>Professional</h4>
-                  <p className="price">$299/mo</p>
-                  <ul>
-                    <li>Inbound + Outbound</li>
-                    <li>AI summaries and suggestions</li>
-                    <li>Human takeover + escalation</li>
-                  </ul>
-                </article>
-                <article className="pricing-card">
-                  <h4>Enterprise</h4>
-                  <p className="price">Custom</p>
-                  <ul>
-                    <li>Multi-tenant setup</li>
-                    <li>Advanced integrations</li>
-                    <li>Priority support</li>
-                  </ul>
-                </article>
-              </div>
-            </section>
-
-            <section className="landing-section contact-block">
-              <h2>Contact</h2>
-              <p>Ready to modernize your call center? Reach us at support@callcenterpro.local</p>
-              <button className="theme-cta" onClick={() => setAuthPage('signup')}>Contact Sales</button>
-            </section>
-          </div>
-        )}
-
-        {(authPage === 'login' || authPage === 'signup') && (
-          <section className="auth-card">
-            <h1>{authPage === 'login' ? 'Welcome Back' : 'Create Your Account'}</h1>
-            <p>{authPage === 'login' ? 'Login to continue into the integrated MIC website.' : 'Sign up to access the unified call center website.'}</p>
-            <input className="auth-input" placeholder="Email" type="email" />
-            <input className="auth-input" placeholder="Password" type="password" />
-            {authPage === 'signup' && <input className="auth-input" placeholder="Confirm Password" type="password" />}
-            <button className="theme-cta" onClick={() => { setIsAuthenticated(true); setCurrentPage('dashboard'); }}>
-              {authPage === 'login' ? 'Login' : 'Create Account'}
-            </button>
-            <button className="theme-link" onClick={() => setAuthPage(authPage === 'login' ? 'signup' : 'login')}>
-              {authPage === 'login' ? 'Need an account? Sign up' : 'Already have an account? Login'}
-            </button>
-            <button className="theme-link" onClick={() => setAuthPage('home')}>Back to Home</button>
-          </section>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div className="theme-shell">
-      <aside className="theme-sidebar">
-        <div className="theme-brand">
-          <div className="theme-brand-icon">M</div>
-          <div>
-            <div className="theme-brand-title">MIC</div>
-            <div className="theme-brand-sub">Call Center Management</div>
-          </div>
-        </div>
-
-        <nav className="theme-nav">
-          <button className={`theme-nav-item ${currentPage === 'dashboard' ? 'active' : ''}`} onClick={() => setCurrentPage('dashboard')}>Dashboard</button>
-          <button className={`theme-nav-item ${currentPage === 'inbound' ? 'active' : ''}`} onClick={() => setCurrentPage('inbound')}>Inbound Calls</button>
-          <button className={`theme-nav-item ${currentPage === 'outbound' ? 'active' : ''}`} onClick={() => setCurrentPage('outbound')}>Outbound Calls</button>
-          <button className={`theme-nav-item ${currentPage === 'analytics' ? 'active' : ''}`} onClick={() => setCurrentPage('analytics')}>Analytics</button>
-        </nav>
-
-        <div className={`theme-connection ${isConnected ? 'ok' : 'bad'}`}>
-          {isConnected ? 'System Status: Online' : 'System Status: Offline'}
-        </div>
-
-        <button className="theme-logout" onClick={() => { setIsAuthenticated(false); setAuthPage('home'); }}>
-          Logout
-        </button>
-      </aside>
-
-      <div className="theme-workspace">
-        <div className="theme-topbar">
-          <div>
-            <h2>{pageMeta[currentPage].title}</h2>
-            <p>{pageMeta[currentPage].subtitle}</p>
-          </div>
-          <div className={`theme-pill ${isConnected ? 'ok' : 'bad'}`}>
-            {isConnected ? 'Ready' : 'Connection Error'}
-          </div>
-        </div>
-
-        {currentPage !== 'inbound' && renderNonInboundPage()}
-
-        <div className={`app ${currentPage === 'inbound' ? '' : 'theme-hidden'}`}>
-      <header className="header inbound-header">
-        <div className="connection-status inbound-connection-only">
+    <div className="app">
+      <header className="header">
+        <h1>Telecom AI Call System</h1>
+        <p>Intelligent Customer Service with Memory and Decision Making</p>
+        <div className="connection-status">
           <span className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`}></span>
           <span className="status-text">
             {isConnected ? 'Ollama Connected' : 'Ollama Disconnected - Start Ollama server'}
@@ -1210,10 +850,8 @@ function App() {
           </>
         )}
       </div>
-        </div>
-      </div>
     </div>
   );
 }
 
-export default App;
+export default InboundCallsPage;

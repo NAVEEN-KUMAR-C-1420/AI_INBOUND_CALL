@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo   Telecom AI Call System - Full Start
+echo   MIC Unified Website - Full Start
 echo ========================================
 
 echo Starting backend stack...
@@ -14,5 +14,6 @@ start "Frontend" cmd /k "cd /d %~dp0 && start-frontend.bat"
 echo.
 echo Services are launching in separate windows.
 echo Backend:  http://localhost:8030
-echo Frontend: http://localhost:5173 (fixed; startup fails if busy)
+echo Frontend: http://localhost:5173 (MIC + integrated theme)
+echo Notes: Dashboard / Inbound / Outbound / Analytics are now wired in one site.
 echo ========================================
