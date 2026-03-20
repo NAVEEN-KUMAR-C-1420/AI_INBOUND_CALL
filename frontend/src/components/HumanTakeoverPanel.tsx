@@ -6,12 +6,14 @@ interface HumanTakeoverPanelProps {
   onSendText: (text: string) => void;
   aiSuggestions: Array<{ suggestion: string; tone: string }>;
   isEnabled: boolean;
+  onToggleTakeover: () => void;
 }
 
 export const HumanTakeoverPanel: React.FC<HumanTakeoverPanelProps> = ({
   onSendText,
   aiSuggestions,
   isEnabled,
+  onToggleTakeover,
 }: HumanTakeoverPanelProps) => {
   const [agentText, setAgentText] = useState('');
   const [sentMessages, setSentMessages] = useState<string[]>([]);
@@ -28,16 +30,17 @@ export const HumanTakeoverPanel: React.FC<HumanTakeoverPanelProps> = ({
     setAgentText(suggestion);
   };
 
-  if (!isEnabled) {
-    return null; // Hidden if not in takeover mode
-  }
-
   return (
-    <div className="human-takeover-panel">
+    <div className={`human-takeover-panel ${isEnabled ? 'enabled' : 'disabled'}`}>
       <div className="takeover-header">
-        <h3>🤖 → 👤 Human Takeover Mode Active</h3>
+        <h3>{isEnabled ? '🤖 -> 👤 Human Takeover Active' : 'Manual Agent Console'}</h3>
+        <button className="takeover-toggle-btn" onClick={onToggleTakeover}>
+          {isEnabled ? 'Return AI Control' : 'Take Control'}
+        </button>
         <p className="takeover-notice">
-          AI is monitoring. You control the conversation. Type messages to send to customer.
+          {isEnabled
+            ? 'AI is assisting in background. Type and send responses directly to customer.'
+            : 'Enable takeover to type manual responses, or wait for escalation trigger.'}
         </p>
       </div>
 
@@ -46,17 +49,22 @@ export const HumanTakeoverPanel: React.FC<HumanTakeoverPanelProps> = ({
         <div className="agent-input-section">
           <label>What would you like to say?</label>
           <textarea
-            placeholder="Type your response to the customer..."
+            placeholder={
+              isEnabled
+                ? 'Type your response to the customer...'
+                : 'Click "Take Control" to start manual typing...'
+            }
             value={agentText}
             onChange={(e) => setAgentText(e.target.value)}
             rows={4}
+            disabled={!isEnabled}
           />
           <button
             onClick={handleSendText}
-            disabled={!agentText.trim()}
+            disabled={!isEnabled || !agentText.trim()}
             className="btn-send-text"
           >
-            📢 Send Text (→ TTS)
+            Send Text (TTS)
           </button>
         </div>
 

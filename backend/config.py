@@ -1,6 +1,6 @@
 import os
 
-CLIENT = "telecorp"  # change to "banking" to switch
+CLIENT = "banking"  # change to "banking" to switch
 
 BASE_DIR = os.path.dirname(__file__)
 CLIENT_DIR = os.path.join(BASE_DIR, "clients", CLIENT)

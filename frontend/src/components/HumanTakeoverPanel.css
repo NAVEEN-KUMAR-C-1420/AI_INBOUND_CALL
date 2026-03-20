@@ -1,32 +1,49 @@
 .human-takeover-panel {
-  background: linear-gradient(135deg, #1e3a5f 0%, #2c4a7f 100%);
-  border: 2px solid #ff6b6b;
+  background: rgba(8, 17, 40, 0.92);
+  border: 1px solid rgba(59, 130, 246, 0.45);
   border-radius: 12px;
-  padding: 20px;
-  margin: 16px 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  padding: 16px;
+  margin: 14px 0 0;
+  color: #d8e6ff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
+.human-takeover-panel.disabled {
+  opacity: 0.9;
+}
+
+.human-takeover-panel.enabled {
+  border-color: rgba(16, 185, 129, 0.55);
 }
 
 .takeover-header {
-  margin-bottom: 20px;
-  border-bottom: 2px solid #ff6b6b;
-  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  padding-bottom: 10px;
 }
 
 .takeover-header h3 {
   margin: 0 0 8px 0;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
-  color: #ffd700;
+  color: #e6f1ff;
+}
+
+.takeover-toggle-btn {
+  border: 1px solid rgba(14, 165, 233, 0.7);
+  background: rgba(14, 165, 233, 0.18);
+  color: #dbeafe;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-bottom: 8px;
 }
 
 .takeover-notice {
   margin: 0;
-  font-size: 13px;
-  color: #b0c9ff;
-  opacity: 0.9;
+  font-size: 12px;
+  color: #a9c2e6;
 }
 
 .takeover-container {
@@ -52,35 +69,35 @@
 .agent-input-section label,
 .ai-suggestions-section h4 {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 12px;
   margin: 0;
-  color: #ffd700;
+  color: #b8d7ff;
 }
 
 .agent-input-section textarea {
   padding: 12px;
-  border: 1px solid #0ea5e9;
+  border: 1px solid rgba(56, 189, 248, 0.35);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  background: rgba(15, 23, 42, 0.8);
+  color: #e2ecff;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: 14px;
   resize: vertical;
 }
 
 .agent-input-section textarea::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(203, 213, 225, 0.55);
 }
 
 .agent-input-section textarea:focus {
   outline: none;
-  border-color: #ffd700;
-  box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
 }
 
 .btn-send-text {
   padding: 12px 16px;
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -91,9 +108,8 @@
 }
 
 .btn-send-text:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
 }
 
 .btn-send-text:disabled {
@@ -115,8 +131,8 @@
 
 .suggestion-item {
   padding: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 215, 0, 0.3);
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(125, 211, 252, 0.25);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -126,28 +142,28 @@
 }
 
 .suggestion-item:hover {
-  background: rgba(255, 215, 0, 0.15);
-  border-color: #ffd700;
-  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+  background: rgba(2, 132, 199, 0.15);
+  border-color: rgba(56, 189, 248, 0.7);
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
 }
 
 .sugg-tone {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #0ea5e9;
+  color: #7dd3fc;
   font-weight: 600;
 }
 
 .sugg-text {
   font-size: 13px;
-  color: #fff;
+  color: #dbeafe;
   line-height: 1.4;
 }
 
 .sugg-action {
   font-size: 11px;
-  color: #ffd700;
+  color: #1d4ed8;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -157,7 +173,7 @@
 }
 
 .no-suggestions {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(191, 219, 254, 0.7);
   font-size: 13px;
   margin: 0;
   text-align: center;
@@ -165,16 +181,16 @@
 }
 
 .sent-messages {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.7);
   padding: 12px;
   border-radius: 8px;
-  border-left: 3px solid #0ea5e9;
+  border-left: 3px solid #38bdf8;
 }
 
 .sent-messages h5 {
   margin: 0 0 10px 0;
   font-size: 13px;
-  color: #ffd700;
+  color: #bfdbfe;
   text-transform: uppercase;
 }
 
@@ -189,9 +205,9 @@
 .sent-msg {
   font-size: 12px;
   padding: 6px 8px;
-  background: rgba(14, 165, 233, 0.1);
+  background: rgba(30, 64, 175, 0.2);
   border-radius: 4px;
-  color: #b0c9ff;
+  color: #e2ecff;
   line-height: 1.3;
 }
 

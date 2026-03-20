@@ -39,7 +39,7 @@ interface UseSpeechRecognitionReturn {
   resetTranscript: () => void;
 }
 
-export function useSpeechRecognition(): UseSpeechRecognitionReturn {
+export function useSpeechRecognition(language: string = 'en-US'): UseSpeechRecognitionReturn {
   const [transcript, setTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -57,7 +57,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     const recognition = recognitionRef.current;
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    recognition.lang = language;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let finalTranscript = '';
@@ -101,7 +101,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
         recognitionRef.current.abort();
       }
     };
-  }, [isSupported]);
+  }, [isSupported, language]);
 
   // Handle listening state changes
   useEffect(() => {

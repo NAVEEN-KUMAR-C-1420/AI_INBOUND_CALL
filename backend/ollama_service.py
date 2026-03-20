@@ -11,6 +11,75 @@ OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL = "llama3.2:3b"
 FALLBACK_MODELS = [MODEL, "llama3.2:latest", "llama3", "qwen3:4b", "qwen2.5:3b", "mistral"]
 
+SUMMARY_INTENTS = {
+    "billing_dispute",
+    "network_outage",
+    "plan_upgrade",
+    "plan_downgrade",
+    "churn_risk",
+    "collections_payment",
+    "technical_support",
+    "number_porting",
+    "sim_swap",
+    "roaming_query",
+    "account_query",
+    "complaint_formal",
+}
+
+
+def _infer_issue_from_transcript(transcript: list) -> str:
+    """Pick the most recent concrete intent from customer turns."""
+    for msg in reversed(transcript or []):
+        role = msg.get("role") or ("user" if msg.get("speaker") == "customer" else "assistant")
+        if role != "user":
+            continue
+        content = str(msg.get("content") or msg.get("message") or "").strip()
+        if not content:
+            continue
+        inferred = _fallback_intent(content)
+        if inferred and inferred != "other":
+            return inferred
+    return "account_query"
+
+
+def _normalize_summary_issue(issue: Any, transcript: list) -> str:
+    value = str(issue or "").strip().lower()
+    if value in SUMMARY_INTENTS:
+        return value
+    if value == "other" or not value:
+        return _infer_issue_from_transcript(transcript)
+    return _infer_issue_from_transcript(transcript)
+
+
+def _normalize_summary_resolution(resolution: Any) -> str:
+    value = str(resolution or "").strip().lower().replace(" ", "_")
+    if value == "resolved":
+        return "resolved"
+    if value == "escalated":
+        return "escalated"
+    if value in {"unresolved", "callback_required", "follow_up", "pending", "in_progress"}:
+        return "unresolved"
+    return "unresolved"
+
+
+def _is_customer_known(customer_info: Optional[dict]) -> bool:
+    if not customer_info:
+        return False
+    return bool(customer_info.get("name") or customer_info.get("phone") or customer_info.get("id"))
+
+
+def _is_reverification_request(text: str) -> bool:
+    t = (text or "").lower()
+    patterns = [
+        "full name",
+        "name, address",
+        "address, age",
+        "email",
+        "verify your account",
+        "share your",
+    ]
+    return any(p in t for p in patterns)
+
 
 async def _resolve_model() -> str:
     """Pick the first preferred model available locally in Ollama."""
@@ -54,42 +123,10 @@ def _extract_json_payload(text: str) -> Optional[dict]:
             return None
 
 
-def _safe_parse_json(text: str) -> dict:
-    """Safe JSON parser for summary responses with intelligent fallback."""
-    if not text:
-        return _create_fallback_summary()
-
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        pass
-
-    # Try to extract JSON object
-    match = re.search(r"\{[\s\S]*\}", text)
-    if match:
-        try:
-            return json.loads(match.group(0))
-        except json.JSONDecodeError:
-            pass
-
-    # Fallback
-    return _create_fallback_summary()
-
-
-def _create_fallback_summary() -> dict:
-    """Create fallback summary when parsing fails."""
-    return {
-        "summary": "Call completed.",
-        "issue": "other",
-        "sentiment": "neutral",
-        "resolution": "unresolved",
-        "recommended_action": "Manual review required",
-    }
-
-
-def _fallback_agent_response(user_text: str) -> str:
+def _fallback_agent_response(user_text: str, customer_info: Optional[dict] = None) -> str:
     """Deterministic fallback response when local model is unavailable."""
     text = (user_text or "").lower()
+    known_customer = _is_customer_known(customer_info)
 
     if any(w in text for w in ["charge", "charged", "bill", "billing", "refund", "invoice"]):
         return (
@@ -115,9 +152,15 @@ def _fallback_agent_response(user_text: str) -> str:
             "Please tell me what is not working, and I will check available retention options for you."
         )
 
+    if known_customer:
+        return (
+            "Thank you. I already have your account details in this call context. "
+            "Please tell me the exact issue you want to resolve right now, and I will continue immediately."
+        )
+
     return (
         "Thank you for the details. "
-        "To continue, please share your full name, address, age, and email so I can verify your account and assist you quickly."
+        "Please confirm your full name and registered phone number so I can verify your account and assist you quickly."
     )
 
 
@@ -175,11 +218,6 @@ async def get_ai_response(
     Generate AI response using RAG-grounded prompt.
     Returns dict with response, intent, sentiment, urgency, and rag_sources.
     """
-    # DEBUG — remove after fixing
-    print("=== CUSTOMER RECEIVED BY AI ===")
-    print(customer)
-    print("================================")
-    
     # Get the latest customer message
     latest_customer_text = ""
     for msg in reversed(messages):
@@ -223,7 +261,7 @@ async def get_ai_response(
             reply = (data.get("response", "") or "").strip()
     except Exception as e:
         print(f"Ollama call failed: {e}")
-        reply = _fallback_agent_response(latest_customer_text)
+        reply = _fallback_agent_response(latest_customer_text, customer)
 
     return {
         "response": reply,
@@ -254,11 +292,15 @@ async def get_contextual_ai_response(
 
     history_block = "\n".join(conversation_history[-5:]) if conversation_history else "No previous conversation"
 
+    known_customer = _is_customer_known(customer_info)
+
     prompt = f"""You are Sarah, a telecom customer support AI.
 
 RULES:
 - Always use conversation history.
 - Do NOT ask user to repeat information already provided.
+- If Customer Info is present, treat identity as already verified for this active call.
+- Do NOT ask for full name, address, age, email, or phone again unless Customer Info is missing.
 - If user gives details (postcode, issue), use them immediately.
 - Continue conversation naturally.
 - Be empathetic if sentiment is negative.
@@ -273,6 +315,8 @@ System State:
 - Postcode requested: {state.get('postcode_requested', False)}
 - Postcode received: {state.get('postcode_received', False)}
 - Issue identified: {state.get('issue_identified', False)}
+- Known customer: {known_customer}
+- Verification complete: {state.get('verification_complete', known_customer)}
 
 Conversation History:
 {history_block}
@@ -316,7 +360,7 @@ Return JSON only:
 
             if not parsed:
                 parsed = {
-                    "response": _fallback_agent_response(current_input),
+                    "response": _fallback_agent_response(current_input, customer_info),
                     "intent": _fallback_intent(current_input),
                     "sentiment": _fallback_sentiment(current_input),
                     "urgency": _fallback_urgency(current_input, _fallback_sentiment(current_input)),
@@ -336,8 +380,10 @@ Return JSON only:
                 urgency = _fallback_urgency(lower_input, sentiment)
 
             response_text = _state_guard_response(state, str(parsed.get("response", "")).strip())
+            if known_customer and _is_reverification_request(response_text):
+                response_text = _fallback_agent_response(current_input, customer_info)
             if not response_text:
-                response_text = _fallback_agent_response(current_input)
+                response_text = _fallback_agent_response(current_input, customer_info)
 
             return {
                 "response": response_text,
@@ -349,8 +395,9 @@ Return JSON only:
     except Exception as e:
         print(f"Contextual response fallback activated: {e}")
         sentiment = _fallback_sentiment(current_input)
+        fallback_text = _fallback_agent_response(current_input, customer_info)
         return {
-            "response": _state_guard_response(state, _fallback_agent_response(current_input)),
+            "response": _state_guard_response(state, fallback_text),
             "intent": _fallback_intent(current_input),
             "sentiment": sentiment,
             "urgency": _fallback_urgency(current_input, sentiment),
@@ -400,56 +447,39 @@ async def generate_call_summary(
     transcript: list,
     customer_history: str = ""
 ) -> dict:
-    """Generate post-call summary using full transcript with fallback logic."""
+    """Generate post-call summary using full transcript."""
 
     if not transcript or len(transcript) < 2:
         return {
             "summary": "Call ended before sufficient conversation.",
-            "issue": "other",
+            "issue": _infer_issue_from_transcript(transcript),
             "sentiment": "neutral",
             "resolution": "unresolved",
             "recommended_action": "Manual review required",
         }
 
-    # Build full conversation text
     transcript_text = ""
-    history_list = []
     for msg in transcript:
         role = msg.get("role") or ("user" if msg.get("speaker") == "customer" else "assistant")
         content = msg.get("content") or msg.get("message") or ""
-        prefix = "Customer" if role == "user" else "Agent"
-        line = f"{prefix}: {content}"
-        transcript_text += line + "\n"
-        history_list.append(line)
+        transcript_text += f"{'Customer' if role == 'user' else 'Agent'}: {content}\n"
 
-    # Build improved prompt
-    prompt = f"""You are an AI call analyst.
+    prompt = f"""Analyse this customer service call transcript and return ONLY a JSON object.
+No explanation, no markdown, just raw JSON.
 
-Analyze the full conversation and generate structured output.
+Customer history:
+{customer_history if customer_history else 'No previous issues'}
 
-{customer_history if customer_history else 'No previous history'}
-
-Full Conversation:
+TRANSCRIPT:
 {transcript_text}
 
-Tasks:
-1. Summarize the issue in 1-2 sentences
-2. Identify issue type (billing_dispute / network_outage / plan_upgrade / plan_downgrade / churn_risk / collections_payment / technical_support / number_porting / sim_swap / roaming_query / account_query / complaint_formal / other)
-3. Detect final sentiment (positive / neutral / frustrated / angry)
-4. Determine resolution status (resolved / unresolved / escalated)
-5. Suggest next action (specific, actionable)
-6. Decision (resolve / follow_up / escalate)
-
-IMPORTANT:
-Return ONLY valid JSON. No markdown, no explanation.
-
-Format:
+Return this exact JSON structure:
 {{
-  "summary": "",
-  "issue": "",
-  "sentiment": "",
-  "resolution": "",
-  "recommended_action": ""
+    "summary": "2 sentence description of what happened on this call",
+    "issue": "one of: billing_dispute, network_outage, plan_upgrade, plan_downgrade, churn_risk, collections_payment, technical_support, number_porting, sim_swap, roaming_query, account_query, complaint_formal, other",
+    "sentiment": "one of: positive, neutral, frustrated, angry",
+    "resolution": "one of: resolved, unresolved, escalated, callback_required",
+    "recommended_action": "one specific action the agent should take next"
 }}"""
 
     selected_model = await _resolve_model()
@@ -460,7 +490,7 @@ Format:
         "stream": False,
         "options": {
             "temperature": 0.1,
-            "num_predict": 250,
+            "num_predict": 220,
         }
     }
 
@@ -469,30 +499,35 @@ Format:
             response = await client.post(OLLAMA_URL, json=payload)
             response.raise_for_status()
             result = response.json()
-            raw_text = result.get("response", "").strip()
-            
-            # DEBUG: print raw response
-            print("===== SUMMARY RAW RESPONSE =====")
-            print(raw_text)
-            print("================================")
-            
-            # Clean markdown if present
-            if raw_text.startswith("```"):
-                raw_text = raw_text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+            text = result.get("response", "").strip()
+            if text.startswith("```"):
+                text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
 
-            # Use safe parser
-            parsed = _safe_parse_json(raw_text)
+            parsed = _extract_json_payload(text)
+            if parsed:
+                return {
+                    "summary": parsed.get("summary", "Call completed."),
+                    "issue": _normalize_summary_issue(parsed.get("issue"), transcript),
+                    "sentiment": parsed.get("sentiment", "neutral"),
+                    "resolution": _normalize_summary_resolution(parsed.get("resolution")),
+                    "recommended_action": parsed.get("recommended_action", "Manual review required"),
+                }
 
             return {
-                "summary": parsed.get("summary", "Call completed."),
-                "issue": parsed.get("issue", "other"),
-                "sentiment": parsed.get("sentiment", "neutral"),
-                "resolution": parsed.get("resolution", "unresolved"),
-                "recommended_action": parsed.get("recommended_action", "Manual review required"),
+                "summary": "Call completed.",
+                "issue": _infer_issue_from_transcript(transcript),
+                "sentiment": "neutral",
+                "resolution": "unresolved",
+                "recommended_action": "Manual review required",
             }
     except Exception as e:
-        print(f"Exception during summary generation: {e}")
-        return _create_fallback_summary()
+        return {
+            "summary": f"Call summary generation failed: {str(e)}",
+            "issue": _infer_issue_from_transcript(transcript),
+            "sentiment": "neutral",
+            "resolution": "unresolved",
+            "recommended_action": "Manual review required",
+        }
 
 
 async def check_ollama_status() -> bool:

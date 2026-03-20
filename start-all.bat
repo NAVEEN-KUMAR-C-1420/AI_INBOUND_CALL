@@ -13,6 +13,6 @@ start "Frontend" cmd /k "cd /d %~dp0 && start-frontend.bat"
 
 echo.
 echo Services are launching in separate windows.
-echo Backend:  http://localhost:8020
-echo Frontend: check terminal output (usually http://localhost:5173+)
+echo Backend:  http://localhost:8030
+echo Frontend: http://localhost:5173 (fixed; startup fails if busy)
 echo ========================================

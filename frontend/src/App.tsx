@@ -22,7 +22,6 @@ interface TranscriptItem {
 }
 
 function App() {
-  const WS_REALTIME_URL = 'ws://localhost:8020/ws/realtime/assist';
   const [callKey, setCallKey] = useState(0);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -36,37 +35,75 @@ function App() {
     intent: string;
     sentiment: string;
     urgency: string;
-    sentimentState?: string;
-    sentimentArc?: string[];
-    languageMode?: string;
-    escalationAlert?: boolean;
-    triggerPhrases?: string[];
-    suggestions?: Array<{
-      rank: number;
-      text: string;
-      resolution_likelihood: number;
-      tone_match: string;
-    }>;
-    abusiveLanguageDetected?: boolean;
-    abusiveWords?: string[];
-    repeatIssueCount?: number;
-    repeatCallerWarning?: boolean;
   } | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [showSummary, setShowSummary] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [clientName, setClientName] = useState('TeleCorp');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [humanTakeoverMode, setHumanTakeoverMode] = useState(false);
-  const [abusiveLanguageDetected, setAbusiveLanguageDetected] = useState(false);
-  const [abusiveWords, setAbusiveWords] = useState<string[]>([]);
-  const [repeatIssueCount, setRepeatIssueCount] = useState(0);
-  const [repeatCallerWarning, setRepeatCallerWarning] = useState(false);
+  const [languageMode, setLanguageMode] = useState('en');
+  const [speechLanguage, setSpeechLanguage] = useState('en-US');
+  const [escalationAlert, setEscalationAlert] = useState(false);
+  const [triggerPhrases, setTriggerPhrases] = useState<string[]>([]);
+  const [aiSuggestions, setAiSuggestions] = useState<Array<{ suggestion: string; tone: string }>>([]);
+  const [customerSentimentArc, setCustomerSentimentArc] = useState<string[]>([]);
+  const [isHumanTakeover, setIsHumanTakeover] = useState(false);
+  const [dialPhone, setDialPhone] = useState('');
+  const [dialName, setDialName] = useState('');
+  const [isDialing, setIsDialing] = useState(false);
+
+  const buildFallbackSuggestions = useCallback((aiText: string, sentiment: string) => {
+    const base = (aiText || '').trim();
+    const next: Array<{ suggestion: string; tone: string }> = [];
+
+    if (base) {
+      next.push({ suggestion: `You can say: ${base}`, tone: 'manager-script' });
+    }
+    if (sentiment.toLowerCase() === 'angry' || sentiment.toLowerCase() === 'frustrated') {
+      next.push({
+        suggestion: 'You can say: I understand your frustration and I will stay on this until we resolve it for you.',
+        tone: 'de-escalation-script',
+      });
+    }
+    next.push({
+      suggestion: 'You can say: I have your account context already. Let me confirm the exact fix and next step now.',
+      tone: 'ownership-script',
+    });
+
+    return next.slice(0, 3);
+  }, []);
+
+  const playEscalationBeep = useCallback(() => {
+    try {
+      const Ctx = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext | undefined;
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      const now = ctx.currentTime;
+
+      const makeBeep = (at: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, at);
+        gain.gain.setValueAtTime(0.0001, at);
+        gain.gain.exponentialRampToValueAtTime(0.18, at + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.22);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(at);
+        osc.stop(at + 0.24);
+      };
+
+      makeBeep(now);
+      makeBeep(now + 0.28);
+      setTimeout(() => ctx.close(), 900);
+    } catch (e) {
+      console.warn('Escalation beep failed:', e);
+    }
+  }, []);
 
   const transcriptRef = useRef<HTMLDivElement>(null);
   const lastProcessedRef = useRef<string>('');
-  const wsRef = useRef<WebSocket | null>(null);
-  const realtimeSessionRef = useRef<string>(`rt-${Date.now()}`);
-  const lastInterimSentRef = useRef<string>('');
 
   const {
     transcript: spokenText,
@@ -76,7 +113,7 @@ function App() {
     startListening,
     stopListening,
     resetTranscript,
-  } = useSpeechRecognition();
+  } = useSpeechRecognition(speechLanguage);
 
   const { speak, stop: stopSpeaking, isSpeaking, isSupported: ttsSupported } = useTextToSpeech();
 
@@ -85,6 +122,9 @@ function App() {
       try {
         const health = await apiService.checkHealth();
         setIsConnected(health.ollama === 'connected');
+        if (health.client_name) {
+          setClientName(health.client_name);
+        }
       } catch {
         setIsConnected(false);
       }
@@ -135,45 +175,6 @@ function App() {
     }
   }, [transcript]);
 
-  useEffect(() => {
-    if (callState !== 'active') {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
-      }
-      return;
-    }
-
-    const ws = new WebSocket(WS_REALTIME_URL);
-    wsRef.current = ws;
-
-    ws.onmessage = event => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data?.error) {
-          return;
-        }
-        setCurrentAnalysis(prev => ({
-          intent: data.intent || prev?.intent || 'account_query',
-          sentiment: data.sentiment || prev?.sentiment || 'neutral',
-          urgency: data.urgency || prev?.urgency || 'low',
-          sentimentState: data.sentiment_state || prev?.sentimentState,
-          sentimentArc: data.sentiment_arc || prev?.sentimentArc || [],
-          languageMode: data.language_mode || prev?.languageMode || 'english',
-          escalationAlert: Boolean(data.escalation_alert),
-          triggerPhrases: data.trigger_phrases || prev?.triggerPhrases || [],
-          suggestions: data.suggestions || prev?.suggestions || [],
-        }));
-      } catch {
-        // Ignore parse errors for non-JSON websocket messages.
-      }
-    };
-
-    return () => {
-      ws.close();
-    };
-  }, [callState]);
-
   const processMessage = useCallback(
     async (message: string) => {
       if (!currentCallId || !message.trim() || isProcessing) {
@@ -191,36 +192,42 @@ function App() {
           intent: response.intent,
           sentiment: response.sentiment,
           urgency: response.urgency,
-          sentimentState: response.sentiment_state,
-          sentimentArc: response.sentiment_arc,
-          languageMode: response.language_mode,
-          escalationAlert: response.escalation_alert,
-          triggerPhrases: response.trigger_phrases,
-          suggestions: response.suggestions,
-          abusiveLanguageDetected: response.abusive_language_detected,
-          abusiveWords: response.abusive_words,
-          repeatIssueCount: response.repeat_issue_count,
-          repeatCallerWarning: response.repeat_caller_warning,
         });
+        setCustomerSentimentArc(prev => [...prev, response.sentiment || 'neutral']);
 
-        // Update state for UI
-        setAbusiveLanguageDetected(response.abusive_language_detected || false);
-        setAbusiveWords(response.abusive_words || []);
-        setRepeatIssueCount(response.repeat_issue_count || 0);
-        setRepeatCallerWarning(response.repeat_caller_warning || false);
+        const escalationRaised = Boolean(
+          response.escalation_alert ||
+          (response.sentiment?.toLowerCase() === 'angry' && response.urgency?.toLowerCase() === 'high')
+        );
+        setEscalationAlert(escalationRaised);
+        setTriggerPhrases(response.trigger_phrases || []);
+        setLanguageMode(response.language_mode || 'en');
+        const nextSuggestions = response.suggestions && response.suggestions.length > 0
+          ? response.suggestions
+          : buildFallbackSuggestions(response.ai_response || '', response.sentiment || 'neutral');
+        setAiSuggestions(nextSuggestions);
+
+        if (escalationRaised) {
+          setIsHumanTakeover(true);
+          stopListening();
+          playEscalationBeep();
+        }
+
+        const aiText = (response.ai_response || '').trim();
+        const safeAiText = aiText || 'I have received your query and I am checking the best resolution now.';
 
         setTranscript(prev => [
           ...prev,
           {
             speaker: 'ai',
-            message: response.ai_response,
+            message: safeAiText,
             intent: response.intent,
             sentiment: response.sentiment,
           },
         ]);
 
         if (ttsSupported) {
-          speak(response.ai_response);
+          speak(safeAiText);
         }
       } catch (error) {
         console.error('Failed to send message:', error);
@@ -229,7 +236,7 @@ function App() {
         resetTranscript();
       }
     },
-    [currentCallId, isProcessing, resetTranscript, speak, ttsSupported]
+        [buildFallbackSuggestions, currentCallId, isProcessing, playEscalationBeep, resetTranscript, speak, stopListening, ttsSupported]
   );
 
   useEffect(() => {
@@ -246,33 +253,6 @@ function App() {
     }
   }, [spokenText, isListening, callState, isProcessing, isSpeaking, processMessage]);
 
-  useEffect(() => {
-    const chunk = interimTranscript.trim();
-    if (
-      callState !== 'active' ||
-      !isListening ||
-      !chunk ||
-      chunk.length < 10 ||
-      chunk === lastInterimSentRef.current ||
-      !wsRef.current ||
-      wsRef.current.readyState !== WebSocket.OPEN
-    ) {
-      return;
-    }
-
-    const payload = {
-      session_id: realtimeSessionRef.current,
-      chunk,
-      role: 'customer',
-      call_type: 'inbound',
-      customer_phone: selectedCustomer?.phone,
-      customer_name: selectedCustomer?.name,
-    };
-
-    wsRef.current.send(JSON.stringify(payload));
-    lastInterimSentRef.current = chunk;
-  }, [interimTranscript, callState, isListening, selectedCustomer]);
-
   const simulateIncomingCall = () => {
     if (!selectedCustomer) {
       return;
@@ -283,7 +263,76 @@ function App() {
     setTranscript([]);
     setSummary(null);
     setShowSummary(false);
+    setEscalationAlert(false);
+    setTriggerPhrases([]);
+    setAiSuggestions([]);
+    setCustomerSentimentArc([]);
+    setIsHumanTakeover(false);
   };
+
+  const normalizePhone = (value: string) => value.replace(/[\s()-]/g, '').trim();
+
+  const startActiveCall = useCallback(async (customer: Customer) => {
+    const call = await apiService.startCall(customer.id);
+    setCurrentCallId(call.id);
+    setCallState('active');
+    setEscalationAlert(false);
+    setTriggerPhrases([]);
+    setAiSuggestions([]);
+    setCustomerSentimentArc([]);
+    setIsHumanTakeover(false);
+
+    const firstName = customer.name.split(' ')[0] || customer.name;
+    const greeting = `Hello ${firstName}, this is Sarah from ${clientName} customer service. How may I assist you today?`;
+    setTranscript([{ speaker: 'ai', message: greeting }]);
+
+    if (ttsSupported) {
+      speak(greeting);
+    }
+  }, [clientName, speak, ttsSupported]);
+
+  const callByPhone = useCallback(async () => {
+    const normalizedPhone = normalizePhone(dialPhone);
+    if (!normalizedPhone) {
+      window.alert('Please enter phone number.');
+      return;
+    }
+
+    setIsDialing(true);
+    try {
+      const existing = customers.find(c => normalizePhone(c.phone) === normalizedPhone);
+      let targetCustomer = existing || null;
+
+      if (!targetCustomer) {
+        if (!dialName.trim()) {
+          window.alert('Name is required for a new phone number.');
+          return;
+        }
+        targetCustomer = await apiService.createCustomer({
+          name: dialName.trim(),
+          phone: dialPhone.trim(),
+          plan: 'Basic',
+        });
+      }
+
+      const refreshedCustomers = await apiService.getCustomers();
+      setCustomers(refreshedCustomers);
+
+      const selected = refreshedCustomers.find(c => c.id === targetCustomer.id) || targetCustomer;
+      setSelectedCustomer(selected);
+      setSelectedHistoryCallId(null);
+      setSummary(null);
+      setShowSummary(false);
+      setTranscript([]);
+
+      await startActiveCall(selected);
+    } catch (error) {
+      console.error('Call by phone failed:', error);
+      window.alert('Unable to start call. Please try again.');
+    } finally {
+      setIsDialing(false);
+    }
+  }, [customers, dialName, dialPhone, startActiveCall]);
 
   const acceptCall = async () => {
     if (!selectedCustomer) {
@@ -291,17 +340,7 @@ function App() {
     }
 
     try {
-      const call = await apiService.startCall(selectedCustomer.id);
-      setCurrentCallId(call.id);
-      setCallState('active');
-
-      const firstName = selectedCustomer.name.split(' ')[0] || selectedCustomer.name;
-      const greeting = `Hello ${firstName}, this is Sarah from TeleCorp customer service. How may I assist you today?`;
-      setTranscript([{ speaker: 'ai', message: greeting }]);
-
-      if (ttsSupported) {
-        speak(greeting);
-      }
+      await startActiveCall(selectedCustomer);
     } catch (error) {
       console.error('Failed to start call:', error);
     }
@@ -346,10 +385,12 @@ function App() {
       setShowSummary(true);
 
       if (selectedCustomer) {
-        const [memory, calls] = await Promise.all([
+        const [memory, calls, freshCustomers] = await Promise.all([
           apiService.getCustomerMemory(selectedCustomer.id),
           apiService.getCustomerCalls(selectedCustomer.id),
+          apiService.getCustomers(),
         ]);
+        setCustomers(freshCustomers);
         setCustomerMemory(memory);
         setCustomerCalls(calls);
         setSelectedHistoryCallId(endedCallId);
@@ -369,6 +410,7 @@ function App() {
     }
 
     setCurrentCallId(null);
+    setIsHumanTakeover(false);
   };
 
   const loadPreviousCall = async (callId: number) => {
@@ -386,6 +428,11 @@ function App() {
       }));
 
       setTranscript(mappedTranscript);
+      setCustomerSentimentArc(
+        mappedTranscript
+          .filter(item => item.speaker === 'customer')
+          .map(item => item.sentiment || 'neutral')
+      );
       setSummary(historySummary);
       setShowSummary(Boolean(historySummary));
       setSelectedHistoryCallId(callId);
@@ -423,12 +470,49 @@ function App() {
     setCustomerCalls([]);
     setCustomerMemory([]);
     setSelectedHistoryCallId(null);
-    setHumanTakeoverMode(false);
-    setAbusiveLanguageDetected(false);
-    setAbusiveWords([]);
-    setRepeatIssueCount(0);
-    setRepeatCallerWarning(false);
+    setEscalationAlert(false);
+    setTriggerPhrases([]);
+    setAiSuggestions([]);
+    setCustomerSentimentArc([]);
+    setIsHumanTakeover(false);
+    setLanguageMode('en');
+    setDialName('');
+    setDialPhone('');
     setCallKey(prev => prev + 1);
+  };
+
+  const handleEscalateToHuman = () => {
+    setEscalationAlert(true);
+    setIsHumanTakeover(true);
+    stopListening();
+    playEscalationBeep();
+  };
+
+  const handleToggleHumanTakeover = () => {
+    setIsHumanTakeover(prev => {
+      const next = !prev;
+      if (next) {
+        stopListening();
+      }
+      return next;
+    });
+  };
+
+  const handleSendHumanText = (text: string) => {
+    const clean = text.trim();
+    if (!clean) return;
+    setTranscript(prev => [
+      ...prev,
+      {
+        speaker: 'ai',
+        message: `[Human Agent] ${clean}`,
+        intent: currentAnalysis?.intent,
+        sentiment: currentAnalysis?.sentiment,
+      },
+    ]);
+    if (ttsSupported) {
+      speak(clean);
+    }
   };
 
   const toggleMic = () => {
@@ -445,80 +529,6 @@ function App() {
     if (s.includes('negative')) return 'sentiment-negative';
     if (s.includes('angry')) return 'sentiment-angry';
     return 'sentiment-neutral';
-  };
-
-  const handleEscalate = async () => {
-    try {
-      const response = await fetch('http://localhost:8020/api/escalate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: realtimeSessionRef.current,
-          reason: abusiveLanguageDetected ? 'abusive_language' : 'escalation_alert',
-          escalation_phone: '1-800-TELECORP',
-        }),
-      });
-      const data = await response.json();
-      console.log('Escalation initiated:', data);
-      alert(`Escalating to: ${data.escalation_phone}\nReference: ${data.reference_id}`);
-    } catch (error) {
-      console.error('Escalation error:', error);
-    }
-  };
-
-  const handleEnableHumanTakeover = async () => {
-    try {
-      const response = await fetch('http://localhost:8020/api/human-takeover/enable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: realtimeSessionRef.current,
-        }),
-      });
-      const data = await response.json();
-      setHumanTakeoverMode(true);
-      console.log('Human takeover enabled:', data);
-    } catch (error) {
-      console.error('Human takeover error:', error);
-    }
-  };
-
-  const handleSendHumanText = async (text: string) => {
-    try {
-      const response = await fetch('http://localhost:8020/api/human-takeover/send-text', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: realtimeSessionRef.current,
-          text: text,
-        }),
-      });
-      const data = await response.json();
-      // Speak the text for the customer
-      if (ttsSupported) {
-        speak(text);
-      }
-      console.log('Text sent:', data);
-    } catch (error) {
-      console.error('Send text error:', error);
-    }
-  };
-
-  const handleDisableHumanTakeover = async () => {
-    try {
-      const response = await fetch('http://localhost:8020/api/human-takeover/disable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: realtimeSessionRef.current,
-        }),
-      });
-      const data = await response.json();
-      setHumanTakeoverMode(false);
-      console.log('Human takeover disabled:', data);
-    } catch (error) {
-      console.error('Disable takeover error:', error);
-    }
   };
 
   return (
@@ -605,6 +615,27 @@ function App() {
               <button className="btn btn-call" onClick={simulateIncomingCall} disabled={!selectedCustomer || !isConnected}>
                 📞 Simulate Incoming Call
               </button>
+
+              <div className="direct-call-box">
+                <h4>Call By Phone</h4>
+                <input
+                  className="direct-call-input"
+                  type="tel"
+                  placeholder="Phone number"
+                  value={dialPhone}
+                  onChange={(e) => setDialPhone(e.target.value)}
+                />
+                <input
+                  className="direct-call-input"
+                  type="text"
+                  placeholder="Name (required for new number)"
+                  value={dialName}
+                  onChange={(e) => setDialName(e.target.value)}
+                />
+                <button className="btn btn-call" onClick={callByPhone} disabled={!isConnected || isDialing}>
+                  {isDialing ? 'Connecting...' : '📲 Call AI Agent'}
+                </button>
+              </div>
             </div>
           )}
 
@@ -680,10 +711,37 @@ function App() {
                     {speechRecognitionSupported && !isListening && 'Click to speak'}
                   </div>
 
+                  <select
+                    value={speechLanguage}
+                    onChange={(e) => setSpeechLanguage(e.target.value)}
+                    style={{
+                      background: 'rgba(255,255,255,0.08)',
+                      color: '#fff',
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: 8,
+                      padding: '8px 10px',
+                      marginLeft: 8,
+                    }}
+                    title="Speech input language"
+                  >
+                    <option value="en-US">English</option>
+                    <option value="ta-IN">Tamil</option>
+                    <option value="en-IN">Tanglish (Indian English)</option>
+                  </select>
+
                   <button className="btn btn-end" onClick={endCall}>
                     📵 End Call
                   </button>
                 </div>
+              )}
+
+              {callState === 'active' && (
+                <HumanTakeoverPanel
+                  isEnabled={isHumanTakeover}
+                  onToggleTakeover={handleToggleHumanTakeover}
+                  onSendText={handleSendHumanText}
+                  aiSuggestions={aiSuggestions}
+                />
               )}
 
               {callState === 'ended' && (
@@ -704,25 +762,25 @@ function App() {
             intent={currentAnalysis?.intent || 'account_query'}
             sentiment={currentAnalysis?.sentiment || 'neutral'}
             urgency={currentAnalysis?.urgency || 'low'}
-            sentimentState={currentAnalysis?.sentimentState || 'neutral'}
-            sentimentArc={currentAnalysis?.sentimentArc || []}
-            languageMode={currentAnalysis?.languageMode || 'english'}
-            escalationAlert={Boolean(currentAnalysis?.escalationAlert)}
-            triggerPhrases={currentAnalysis?.triggerPhrases || []}
-            suggestions={currentAnalysis?.suggestions || []}
+            sentimentState={currentAnalysis?.sentiment || 'neutral'}
+            sentimentArc={customerSentimentArc}
+            languageMode={languageMode}
+            escalationAlert={escalationAlert}
+            triggerPhrases={triggerPhrases}
+            suggestions={[]}
             customer={selectedCustomer}
             isCallActive={callState === 'active'}
-            aiResponse={[...transcript].reverse().find(item => item.speaker === 'ai')?.message || ''}
+            aiResponse={
+              aiSuggestions[0]?.suggestion
+              || [...transcript].reverse().find(item => item.speaker === 'ai')?.message
+              || ''
+            }
             hasCustomerSpoken={transcript.some(item => item.speaker === 'customer')}
             previousCallCount={customerCalls.length}
             lastIssue={customerMemory[0]?.issue}
             isRepeatIssue={customerCalls.length >= 3 && customerMemory[0]?.status !== 'resolved'}
-            abusiveLanguageDetected={abusiveLanguageDetected}
-            abusiveWords={abusiveWords}
-            repeatIssueCount={repeatIssueCount}
-            repeatCallerWarning={repeatCallerWarning}
-            onEscalate={handleEscalate}
-            onEnableHumanTakeover={handleEnableHumanTakeover}
+            onEscalate={handleEscalateToHuman}
+            onEnableHumanTakeover={handleEscalateToHuman}
           />
 
           <div style={{ marginTop: 16 }}>
@@ -739,36 +797,6 @@ function App() {
               </div>
             </div>
           </div>
-
-          <HumanTakeoverPanel
-            onSendText={handleSendHumanText}
-            aiSuggestions={[
-              { suggestion: "Let me look into that for you right away.", tone: "empathetic" },
-              { suggestion: "I completely understand your frustration. Let's resolve this.", tone: "understanding" },
-              { suggestion: "I'd like to escalate this to my manager for you.", tone: "professional" },
-            ]}
-            isEnabled={humanTakeoverMode}
-          />
-
-          {humanTakeoverMode && (
-            <button
-              onClick={handleDisableHumanTakeover}
-              style={{
-                marginTop: 10,
-                padding: '10px 16px',
-                background: '#6B7280',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 6,
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: 'pointer',
-                width: '100%',
-              }}
-            >
-              ✓ Return to AI-Assisted Mode
-            </button>
-          )}
         </div>
       </main>
 
