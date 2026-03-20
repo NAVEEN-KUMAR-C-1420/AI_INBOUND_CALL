@@ -1,0 +1,809 @@
+{
+  "company": {
+    "name": "TeleCorp UK",
+    "tagline": "Connecting UK Businesses",
+    "support_hours": "Mon-Fri 8am-8pm, Sat 9am-5pm GMT",
+    "emergency_line": "+44 800 123 4567",
+    "website": "www.telecorp.co.uk",
+    "address": "1 Tech Square, London, EC1A 1BB"
+  },
+  "persona": {
+    "name": "Sarah",
+    "tone": "professional, empathetic, solution-focused, British",
+    "greeting": "Hello, thank you for calling TeleCorp UK. My name is Sarah, how can I help you today?",
+    "greeting_returning": "Hello {customer_name}, welcome back to TeleCorp UK. I can see you're on our {plan_name} plan. How can I help you today?",
+    "hold_message": "I just need to check a few things for you, please bear with me for a moment.",
+    "transfer_message": "I'm going to transfer you to our specialist team who will be able to help you further. Please hold.",
+    "sign_off": "Is there anything else I can help you with today? Thank you for calling TeleCorp UK. Have a great day!",
+    "escalation_handoff": "I completely understand your frustration and I want to make sure this gets resolved properly. I'm going to connect you with my senior colleague right now."
+  },
+  "plans": [
+    {
+      "id": "sim_only_monthly",
+      "name": "SIM Only Monthly",
+      "price_gbp": 15,
+      "data_gb": 10,
+      "call_minutes": "unlimited",
+      "sms_limit": "unlimited",
+      "contract_months": 0,
+      "early_termination_fee_gbp": 0,
+      "speeds_mbps": null,
+      "can_upgrade_to": ["sim_only_annual", "business_mobile", "enterprise_bundle"],
+      "perks": ["No contract commitment", "5G ready", "EU roaming included", "WiFi calling"],
+      "best_for": "Customers who want flexibility without a long-term commitment"
+    },
+    {
+      "id": "sim_only_annual",
+      "name": "SIM Only Annual",
+      "price_gbp": 10,
+      "data_gb": 20,
+      "call_minutes": "unlimited",
+      "sms_limit": "unlimited",
+      "contract_months": 12,
+      "early_termination_fee_gbp": 50,
+      "speeds_mbps": null,
+      "can_upgrade_to": ["business_mobile", "enterprise_bundle"],
+      "perks": ["Best value SIM deal", "5G ready", "EU roaming included", "Data rollover"],
+      "best_for": "Personal users looking for great value with moderate data needs"
+    },
+    {
+      "id": "broadband_basic",
+      "name": "Broadband Basic",
+      "price_gbp": 25,
+      "data_gb": "unlimited",
+      "call_minutes": null,
+      "sms_limit": null,
+      "contract_months": 18,
+      "early_termination_fee_gbp": 150,
+      "speeds_mbps": {"download": 36, "upload": 9},
+      "can_upgrade_to": ["broadband_pro", "enterprise_bundle"],
+      "perks": ["Free router included", "No setup fee", "UK-based support", "Static IP available"],
+      "best_for": "Small households with basic browsing and streaming needs"
+    },
+    {
+      "id": "broadband_pro",
+      "name": "Broadband Pro",
+      "price_gbp": 45,
+      "data_gb": "unlimited",
+      "call_minutes": null,
+      "sms_limit": null,
+      "contract_months": 18,
+      "early_termination_fee_gbp": 200,
+      "speeds_mbps": {"download": 150, "upload": 30},
+      "can_upgrade_to": ["enterprise_bundle"],
+      "perks": ["Premium WiFi 6 router", "Priority support", "Free installation", "Speed guarantee"],
+      "best_for": "Families and home workers needing fast, reliable connectivity"
+    },
+    {
+      "id": "business_mobile",
+      "name": "Business Mobile",
+      "price_gbp": 35,
+      "data_gb": "unlimited",
+      "call_minutes": "unlimited",
+      "sms_limit": "unlimited",
+      "contract_months": 24,
+      "early_termination_fee_gbp": 250,
+      "speeds_mbps": null,
+      "can_upgrade_to": ["enterprise_bundle"],
+      "perks": ["Dedicated account manager", "International roaming in 50 countries", "Priority network access", "Multi-SIM management portal"],
+      "best_for": "Business professionals who need reliable unlimited connectivity"
+    },
+    {
+      "id": "enterprise_bundle",
+      "name": "Enterprise Bundle",
+      "price_gbp": 99,
+      "data_gb": "unlimited",
+      "call_minutes": "unlimited",
+      "sms_limit": "unlimited",
+      "contract_months": 24,
+      "early_termination_fee_gbp": 500,
+      "speeds_mbps": {"download": 500, "upload": 100},
+      "can_upgrade_to": [],
+      "perks": ["Mobile + Broadband combined", "24/7 priority support", "Dedicated account team", "SLA guarantees"],
+      "best_for": "Growing businesses needing complete connectivity solutions"
+    }
+  ],
+  "intents": [
+    {
+      "id": "billing_dispute",
+      "display_name": "Billing Dispute",
+      "category": "billing",
+      "keywords": ["overcharged", "wrong bill", "incorrect charge", "charged twice", "billing error", "extra charges", "unexpected charge", "dispute", "refund", "credited", "money back", "didn't authorise"],
+      "resolution_steps": [
+        "1. Verify customer identity using security questions",
+        "2. Pull up the last 3 invoices and identify the disputed charge",
+        "3. Check if the charge is valid (roaming, premium SMS, data overage)",
+        "4. If valid, explain the charge clearly with dates and usage",
+        "5. If error confirmed, process refund within 3-5 business days",
+        "6. Apply goodwill credit of £5, if customer remains unhappy"
+      ],
+      "avg_handle_time_seconds": 420,
+      "escalation_threshold": 2,
+      "escalate_to": "billing",
+      "sample_customer_phrases": [
+        "I've been charged twice for my monthly bill",
+        "There's a £50 charge on my bill I don't recognise",
+        "Why is my bill so high this month?",
+        "I need a refund for this incorrect charge",
+        "You've taken too much money from my account"
+      ],
+      "auto_resolvable": false,
+      "required_data": ["account_number", "disputed_amount", "invoice_date"]
+    },
+    {
+      "id": "network_outage",
+      "display_name": "Network Outage",
+      "category": "technical",
+      "keywords": ["no signal", "no service", "network down", "outage", "can't make calls", "no data", "not working", "no connection", "bars", "coverage", "dead zone", "blackout"],
+      "resolution_steps": [
+        "1. Confirm customer's postcode to check local network status",
+        "2. Check internal outage dashboard for known issues",
+        "3. If outage confirmed, provide estimated fix time and apologise",
+        "4. If no outage, guide customer through device troubleshooting",
+        "5. Offer to send network refresh signal to SIM",
+        "6. If issue persists, log a network ticket with priority flag"
+      ],
+      "avg_handle_time_seconds": 300,
+      "escalation_threshold": 1,
+      "escalate_to": "technical",
+      "sample_customer_phrases": [
+        "I've had no signal for two days",
+        "My phone shows no service at home",
+        "Is there an outage in my area?",
+        "The network keeps dropping out",
+        "I can't make any calls or use data"
+      ],
+      "auto_resolvable": true,
+      "required_data": ["postcode", "device_type", "issue_start_time"]
+    },
+    {
+      "id": "plan_upgrade",
+      "display_name": "Plan Upgrade",
+      "category": "sales",
+      "keywords": ["upgrade", "more data", "better plan", "faster", "unlimited", "change plan", "bigger package", "switch plan", "need more", "running out"],
+      "resolution_steps": [
+        "1. Review customer's current plan and usage patterns",
+        "2. Identify if they're consistently exceeding limits",
+        "3. Present 2-3 suitable upgrade options with clear pricing",
+        "4. Highlight the value and savings of annual commitment",
+        "5. Process upgrade with immediate effect or next billing cycle",
+        "6. Confirm new charges and send updated contract via email"
+      ],
+      "avg_handle_time_seconds": 360,
+      "escalation_threshold": 3,
+      "escalate_to": "retention",
+      "sample_customer_phrases": [
+        "I keep running out of data, can I upgrade?",
+        "What's your best unlimited data plan?",
+        "I want to move to a faster broadband package",
+        "Can I get more minutes on my plan?",
+        "I'm interested in upgrading to business mobile"
+      ],
+      "auto_resolvable": true,
+      "required_data": ["current_plan", "desired_features", "budget"]
+    },
+    {
+      "id": "plan_downgrade",
+      "display_name": "Plan Downgrade",
+      "category": "retention",
+      "keywords": ["downgrade", "cheaper", "reduce", "less data", "lower plan", "cut costs", "too expensive", "save money", "basic plan", "minimum"],
+      "resolution_steps": [
+        "1. Understand the reason for wanting to downgrade",
+        "2. Check current usage to see if downgrade makes sense",
+        "3. Offer a retention deal before processing downgrade",
+        "4. If retention declined, present suitable lower-tier options",
+        "5. Explain any contract implications or early termination",
+        "6. Process downgrade for next billing cycle"
+      ],
+      "avg_handle_time_seconds": 480,
+      "escalation_threshold": 2,
+      "escalate_to": "retention",
+      "sample_customer_phrases": [
+        "I want to move to a cheaper plan",
+        "Can I reduce my package to save money?",
+        "I don't need all this data anymore",
+        "What's your cheapest option?",
+        "I need to cut my phone bill down"
+      ],
+      "auto_resolvable": false,
+      "required_data": ["reason_for_downgrade", "target_budget"]
+    },
+    {
+      "id": "churn_risk",
+      "display_name": "Cancellation Request",
+      "category": "retention",
+      "keywords": ["cancel", "leave", "switching", "competitor", "EE", "Vodafone", "Three", "O2", "BT", "Sky", "Virgin", "terminate", "end contract", "leaving"],
+      "resolution_steps": [
+        "1. Express genuine concern and ask why they want to leave",
+        "2. Listen actively and acknowledge their frustration",
+        "3. Check eligibility for retention offers in the system",
+        "4. Present the best available retention deal immediately",
+        "5. If declined, process PAC code request (takes 24 hours)",
+        "6. Log churn reason for product feedback"
+      ],
+      "avg_handle_time_seconds": 600,
+      "escalation_threshold": 1,
+      "escalate_to": "retention",
+      "sample_customer_phrases": [
+        "I want to cancel my contract",
+        "I'm switching to Vodafone, they're cheaper",
+        "Can I have my PAC code please?",
+        "I've had enough, I'm leaving TeleCorp",
+        "How do I cancel my account?"
+      ],
+      "auto_resolvable": false,
+      "required_data": ["churn_reason", "competitor_offer"]
+    },
+    {
+      "id": "collections_payment",
+      "display_name": "Outstanding Payment",
+      "category": "collections",
+      "keywords": ["overdue", "payment", "arrears", "late", "suspended", "reconnect", "pay bill", "balance", "owe", "debt", "warning letter", "collections"],
+      "resolution_steps": [
+        "1. Verify customer identity with enhanced security",
+        "2. State the outstanding balance clearly and calmly",
+        "3. Ask if they're able to pay the full amount today",
+        "4. If not, offer a payment plan (up to 3 instalments)",
+        "5. Process payment or set up Direct Debit for plan",
+        "6. Confirm reconnection within 2 hours if applicable"
+      ],
+      "avg_handle_time_seconds": 540,
+      "escalation_threshold": 2,
+      "escalate_to": "collections",
+      "sample_customer_phrases": [
+        "I got a letter saying I owe money",
+        "My service has been suspended, how do I pay?",
+        "Can I set up a payment plan for my bill?",
+        "How much do I owe you?",
+        "I want to pay off my outstanding balance"
+      ],
+      "auto_resolvable": true,
+      "required_data": ["outstanding_amount", "payment_method", "payment_plan_preference"]
+    },
+    {
+      "id": "technical_support",
+      "display_name": "Technical Support",
+      "category": "technical",
+      "keywords": ["not working", "slow", "broken", "help", "issue", "problem", "error", "settings", "configure", "setup", "voicemail", "APN", "MMS"],
+      "resolution_steps": [
+        "1. Identify the specific technical issue clearly",
+        "2. Confirm device make, model, and software version",
+        "3. Guide through basic troubleshooting (restart, SIM reseat)",
+        "4. Send correct APN/MMS settings if data issue",
+        "5. If unresolved, book engineer visit or arrange replacement",
+        "6. Create technical support ticket for follow-up"
+      ],
+      "avg_handle_time_seconds": 480,
+      "escalation_threshold": 2,
+      "escalate_to": "technical",
+      "sample_customer_phrases": [
+        "My internet is really slow",
+        "I can't get my emails to work",
+        "How do I set up my voicemail?",
+        "My phone isn't receiving picture messages",
+        "The router keeps disconnecting"
+      ],
+      "auto_resolvable": true,
+      "required_data": ["device_info", "issue_description", "troubleshooting_done"]
+    },
+    {
+      "id": "number_porting",
+      "display_name": "Number Porting",
+      "category": "admin",
+      "keywords": ["keep number", "port", "PAC", "STAC", "transfer number", "bring number", "same number", "porting"],
+      "resolution_steps": [
+        "1. Confirm if customer is porting IN or porting OUT",
+        "2. For port OUT: Generate PAC code (valid 30 days)",
+        "3. For port IN: Collect PAC code and verify number",
+        "4. Explain that porting takes 1-2 business days",
+        "5. Warn that old service will terminate on port completion",
+        "6. Send confirmation SMS with porting reference"
+      ],
+      "avg_handle_time_seconds": 300,
+      "escalation_threshold": 3,
+      "escalate_to": "technical",
+      "sample_customer_phrases": [
+        "I want to keep my old number",
+        "Can I port my number to TeleCorp?",
+        "I need a PAC code to leave",
+        "How long does number transfer take?",
+        "I want to bring my number from Vodafone"
+      ],
+      "auto_resolvable": true,
+      "required_data": ["port_direction", "mobile_number", "pac_code"]
+    },
+    {
+      "id": "sim_swap",
+      "display_name": "SIM Swap",
+      "category": "admin",
+      "keywords": ["new SIM", "lost SIM", "stolen", "SIM swap", "replacement", "damaged SIM", "SIM not working", "eSIM", "physical SIM"],
+      "resolution_steps": [
+        "1. Verify customer identity with enhanced security (SIM fraud risk)",
+        "2. Confirm reason for SIM swap (lost/stolen/damaged/upgrade)",
+        "3. If stolen, offer to suspend account immediately",
+        "4. Order replacement SIM (free) or activate eSIM",
+        "5. New SIM arrives in 2-3 business days by post",
+        "6. Old SIM will be deactivated when new one is activated"
+      ],
+      "avg_handle_time_seconds": 360,
+      "escalation_threshold": 2,
+      "escalate_to": "technical",
+      "sample_customer_phrases": [
+        "I've lost my phone and need a new SIM",
+        "My SIM card is damaged",
+        "Can I switch to an eSIM?",
+        "I need a replacement SIM card",
+        "My phone was stolen, I need to block the SIM"
+      ],
+      "auto_resolvable": true,
+      "required_data": ["reason", "delivery_address", "sim_type_preference"]
+    },
+    {
+      "id": "roaming_query",
+      "display_name": "Roaming Query",
+      "category": "billing",
+      "keywords": ["roaming", "abroad", "holiday", "international", "travel", "foreign", "overseas", "Europe", "EU", "data abroad", "calls abroad"],
+      "resolution_steps": [
+        "1. Identify which country the customer is travelling to",
+        "2. Check if destination is in EU (included) or rest of world",
+        "3. Explain roaming rates for the specific destination",
+        "4. Offer travel data add-on if beneficial",
+        "5. Remind to turn off data roaming if not using add-on",
+        "6. Send roaming guide via SMS"
+      ],
+      "avg_handle_time_seconds": 240,
+      "escalation_threshold": 3,
+      "escalate_to": "billing",
+      "sample_customer_phrases": [
+        "I'm going to Spain, will my phone work?",
+        "How much does data cost in America?",
+        "Do you have any travel packages?",
+        "Will I be charged extra in Europe?",
+        "Can I use my data allowance abroad?"
+      ],
+      "auto_resolvable": true,
+      "required_data": ["destination_country", "travel_dates", "usage_estimate"]
+    },
+    {
+      "id": "account_query",
+      "display_name": "Account Query",
+      "category": "admin",
+      "keywords": ["account", "details", "update", "change address", "email", "password", "login", "balance", "usage", "allowance", "remaining"],
+      "resolution_steps": [
+        "1. Verify customer identity",
+        "2. Identify what information they need",
+        "3. Provide current balance, usage, or billing date as requested",
+        "4. Process any account detail updates",
+        "5. Confirm changes via SMS or email",
+        "6. Offer to set up online account if not registered"
+      ],
+      "avg_handle_time_seconds": 180,
+      "escalation_threshold": 3,
+      "escalate_to": "billing",
+      "sample_customer_phrases": [
+        "How much data have I used this month?",
+        "I need to update my address",
+        "When is my next bill due?",
+        "Can you reset my online account password?",
+        "What's my current balance?"
+      ],
+      "auto_resolvable": true,
+      "required_data": ["query_type", "new_details_if_update"]
+    },
+    {
+      "id": "complaint_formal",
+      "display_name": "Formal Complaint",
+      "category": "complaints",
+      "keywords": ["complaint", "formal", "manager", "escalate", "ombudsman", "OFCOM", "unacceptable", "disgusted", "appalling", "worst", "never", "sue", "legal"],
+      "resolution_steps": [
+        "1. Apologise sincerely and thank them for bringing this to attention",
+        "2. Listen to the full complaint without interrupting",
+        "3. Log the complaint formally with a unique reference number",
+        "4. Explain the complaints process and 8-week timeline",
+        "5. Offer immediate resolution or goodwill gesture if appropriate",
+        "6. Provide complaints team direct contact details"
+      ],
+      "avg_handle_time_seconds": 720,
+      "escalation_threshold": 1,
+      "escalate_to": "complaints",
+      "sample_customer_phrases": [
+        "I want to make a formal complaint",
+        "This is absolutely unacceptable, I want to speak to a manager",
+        "I'm going to report you to OFCOM",
+        "I've never experienced such terrible service",
+        "I want this escalated to your complaints department"
+      ],
+      "auto_resolvable": false,
+      "required_data": ["complaint_details", "desired_outcome", "timeline_of_events"]
+    }
+  ],
+  "retention_offers": [
+    {
+      "id": "ret_10_percent",
+      "trigger_intent": "churn_risk",
+      "trigger_condition": "Customer mentions leaving or competitor name",
+      "offer_text": "I'd really hate to see you go. I can offer you 10% off your monthly bill for the next 6 months. That's a saving of over £20. Would that help you stay with us?",
+      "discount_percent": 10,
+      "credit_gbp": null,
+      "validity_days": 180,
+      "approval_required": false,
+      "max_uses_per_customer": 1
+    },
+    {
+      "id": "ret_data_boost",
+      "trigger_intent": "plan_downgrade",
+      "trigger_condition": "Customer wants to downgrade due to cost",
+      "offer_text": "Instead of downgrading, how about I double your data for free for the next 3 months? That way you keep all your benefits at the same price.",
+      "discount_percent": null,
+      "credit_gbp": null,
+      "validity_days": 90,
+      "approval_required": false,
+      "max_uses_per_customer": 1
+    },
+    {
+      "id": "ret_bill_credit",
+      "trigger_intent": "billing_dispute",
+      "trigger_condition": "Customer frustrated after billing issue resolved",
+      "offer_text": "As a gesture of goodwill for the inconvenience, I've applied a £15 credit to your account. You'll see this on your next bill.",
+      "discount_percent": null,
+      "credit_gbp": 15,
+      "validity_days": 30,
+      "approval_required": false,
+      "max_uses_per_customer": 2
+    },
+    {
+      "id": "ret_loyalty_discount",
+      "trigger_intent": "churn_risk",
+      "trigger_condition": "Customer has been with TeleCorp for over 2 years",
+      "offer_text": "You've been a loyal customer for over 2 years and we really value that. I can offer you our loyalty discount of 15% off for the next 12 months.",
+      "discount_percent": 15,
+      "credit_gbp": null,
+      "validity_days": 365,
+      "approval_required": true,
+      "max_uses_per_customer": 1
+    },
+    {
+      "id": "ret_free_upgrade",
+      "trigger_intent": "churn_risk",
+      "trigger_condition": "Customer on basic plan threatening to leave",
+      "offer_text": "I can upgrade you to our next tier plan completely free for 3 months, so you can experience the extra benefits. If you like it, you can keep it or switch back.",
+      "discount_percent": 100,
+      "credit_gbp": null,
+      "validity_days": 90,
+      "approval_required": true,
+      "max_uses_per_customer": 1
+    },
+    {
+      "id": "ret_contract_buyout",
+      "trigger_intent": "churn_risk",
+      "trigger_condition": "Customer mentions competitor is paying their exit fee",
+      "offer_text": "We can match that. If you commit to a 24-month contract, we'll credit up to £200 towards your exit fees. That way you don't pay a penny to switch.",
+      "discount_percent": null,
+      "credit_gbp": 200,
+      "validity_days": 30,
+      "approval_required": true,
+      "max_uses_per_customer": 1
+    },
+    {
+      "id": "ret_outage_credit",
+      "trigger_intent": "network_outage",
+      "trigger_condition": "Confirmed outage lasting more than 24 hours",
+      "offer_text": "I'm really sorry about the service disruption. I've applied a credit equivalent to 3 days of your service to your account as compensation.",
+      "discount_percent": null,
+      "credit_gbp": 5,
+      "validity_days": 30,
+      "approval_required": false,
+      "max_uses_per_customer": 3
+    },
+    {
+      "id": "ret_payment_plan",
+      "trigger_intent": "collections_payment",
+      "trigger_condition": "Customer unable to pay full balance",
+      "offer_text": "I understand times can be tough. We can split your outstanding balance into 3 monthly payments with no extra charges. Would that help?",
+      "discount_percent": null,
+      "credit_gbp": null,
+      "validity_days": 90,
+      "approval_required": false,
+      "max_uses_per_customer": 2
+    }
+  ],
+  "escalation": {
+    "billing": {
+      "team_name": "Billing Resolutions Team",
+      "slack_channel": "#billing-escalations",
+      "avg_wait_minutes": 5,
+      "priority": 3,
+      "when_to_escalate": [
+        "Refund request over £50",
+        "Customer disputes charge after explanation",
+        "Complex multi-invoice issues",
+        "Corporate account billing queries"
+      ]
+    },
+    "technical": {
+      "team_name": "Technical Support Specialists",
+      "slack_channel": "#tech-support-l2",
+      "avg_wait_minutes": 8,
+      "priority": 2,
+      "when_to_escalate": [
+        "Network issue persists after troubleshooting",
+        "Hardware replacement required",
+        "Complex configuration issues",
+        "Business-critical connectivity problems"
+      ]
+    },
+    "collections": {
+      "team_name": "Collections Department",
+      "slack_channel": "#collections",
+      "avg_wait_minutes": 3,
+      "priority": 2,
+      "when_to_escalate": [
+        "Balance over £200 overdue",
+        "Customer refuses to pay",
+        "Payment plan longer than 3 months needed",
+        "Account suspension decision required"
+      ]
+    },
+    "retention": {
+      "team_name": "Customer Retention Specialists",
+      "slack_channel": "#retention-saves",
+      "avg_wait_minutes": 2,
+      "priority": 1,
+      "when_to_escalate": [
+        "High-value customer threatening to leave",
+        "Standard retention offers declined",
+        "Customer requesting manager",
+        "Competitor win-back opportunity"
+      ]
+    },
+    "complaints": {
+      "team_name": "Complaints Resolution Team",
+      "slack_channel": "#formal-complaints",
+      "avg_wait_minutes": 10,
+      "priority": 1,
+      "when_to_escalate": [
+        "Customer requests formal complaint",
+        "OFCOM or ombudsman mentioned",
+        "Legal action threatened",
+        "Complaint unresolved after 2 contacts"
+      ]
+    },
+    "supervisor": {
+      "team_name": "Duty Supervisor",
+      "slack_channel": "#supervisors-oncall",
+      "avg_wait_minutes": 1,
+      "priority": 1,
+      "when_to_escalate": [
+        "Customer demands manager immediately",
+        "Abusive behaviour",
+        "Safeguarding concern",
+        "PR or social media risk identified"
+      ]
+    }
+  },
+  "compliance": {
+    "call_recording_disclaimer": "For quality and training purposes, this call may be recorded. By continuing, you consent to this recording.",
+    "gdpr_consent_script": "Before I can access your account, I need to confirm you're happy for me to view your personal information to help resolve your query today. Is that okay?",
+    "identity_verification": {
+      "step1": "full name and date of birth",
+      "step2": "postcode on the account",
+      "step3": "last 4 digits of the payment card or bank account",
+      "failure_script": "I'm sorry, but I wasn't able to verify your identity. For security reasons, I'll need to send a verification link to your registered email address.",
+      "max_attempts": 3
+    },
+    "refund_policy_days": 14,
+    "data_retention_years": 7,
+    "right_to_erasure_script": "You have the right to request deletion of your personal data. I can start this process for you, but please note it may take up to 30 days to complete and some data may be retained for legal purposes."
+  },
+  "outage_responses": {
+    "planned_maintenance": {
+      "title": "Planned Maintenance",
+      "message": "We have scheduled maintenance in your area which may affect service. This is to improve our network for you.",
+      "estimated_fix": "Maintenance window ends at the scheduled time",
+      "compensation_offered": "none"
+    },
+    "emergency_outage": {
+      "title": "Emergency Outage",
+      "message": "I can see there's an unexpected outage affecting your area. Our engineers are working urgently to restore service.",
+      "estimated_fix": "Within 4-6 hours",
+      "compensation_offered": "Pro-rata credit for downtime"
+    },
+    "partial_service": {
+      "title": "Partial Service Disruption",
+      "message": "Some services may be intermittent in your area while we resolve a technical issue.",
+      "estimated_fix": "Within 2-3 hours",
+      "compensation_offered": "Goodwill credit on request"
+    },
+    "international": {
+      "title": "International Service Issue",
+      "message": "There's currently an issue with our international partner network affecting calls or data in certain regions.",
+      "estimated_fix": "Dependent on partner resolution",
+      "compensation_offered": "Refund of affected charges"
+    },
+    "resolved": {
+      "title": "Service Restored",
+      "message": "Good news - the issue in your area has been resolved and full service should now be available.",
+      "estimated_fix": "Resolved",
+      "compensation_offered": "Automatic credit applied"
+    }
+  },
+  "sentiment_triggers": {
+    "mild_frustration": [
+      "this is frustrating",
+      "I've been waiting",
+      "not ideal",
+      "bit annoying",
+      "would have expected better",
+      "slightly disappointed",
+      "not great",
+      "could be better",
+      "a bit much",
+      "not happy about this"
+    ],
+    "frustrated": [
+      "this is ridiculous",
+      "I've called multiple times",
+      "nobody helps me",
+      "keep getting passed around",
+      "wasting my time",
+      "very disappointed",
+      "not good enough",
+      "I'm fed up",
+      "this is unacceptable",
+      "getting nowhere"
+    ],
+    "angry": [
+      "absolutely disgusted",
+      "worst service ever",
+      "total joke",
+      "beyond furious",
+      "I want to speak to your manager",
+      "I'm going to report you",
+      "this is a scam",
+      "you're thieves",
+      "I want compensation",
+      "I'm recording this call"
+    ],
+    "churn_risk": [
+      "I'm leaving",
+      "cancelling my contract",
+      "switching to Vodafone",
+      "EE offered me",
+      "going to Three",
+      "found a better deal",
+      "not worth it anymore",
+      "had enough of TeleCorp",
+      "give me my PAC code",
+      "competitors are cheaper"
+    ],
+    "satisfied": [
+      "thank you so much",
+      "you've been really helpful",
+      "that's sorted it",
+      "I appreciate your help",
+      "brilliant service"
+    ]
+  },
+  "faq": [
+    {
+      "question": "What's my current data usage?",
+      "answer": "I can see you've used {{data_used}}GB of your {{data_limit}}GB allowance this month. Your allowance resets on {{reset_date}}.",
+      "category": "account",
+      "follow_up": "Would you like me to set up a usage alert to notify you when you reach 80%?"
+    },
+    {
+      "question": "When is my contract end date?",
+      "answer": "Your current contract ends on {{contract_end}}. After that, you'll move to a rolling monthly plan unless you choose to renew.",
+      "category": "account",
+      "follow_up": "Would you like me to check if you're eligible for an early upgrade?"
+    },
+    {
+      "question": "How do I check my bill online?",
+      "answer": "You can view your bills in the TeleCorp app or at my.telecorp.co.uk. Log in with your registered email and you'll see all your bills under 'Billing'.",
+      "category": "account",
+      "follow_up": "Would you like me to resend your login details?"
+    },
+    {
+      "question": "Can I change my payment date?",
+      "answer": "Yes, I can move your payment date to any day of the month that suits you better. This will take effect from your next billing cycle.",
+      "category": "billing",
+      "follow_up": "What date would work best for you?"
+    },
+    {
+      "question": "Why is my bill higher than usual?",
+      "answer": "Let me take a look at your recent bill. I can see the difference is due to {{reason}}. Would you like me to explain this in more detail?",
+      "category": "billing",
+      "follow_up": null
+    },
+    {
+      "question": "How do I set up voicemail?",
+      "answer": "To set up voicemail, dial 901 from your TeleCorp mobile. You'll be guided through creating a PIN and recording your greeting.",
+      "category": "technical",
+      "follow_up": "Would you like me to send you the full voicemail guide by text?"
+    },
+    {
+      "question": "My internet is slow, what can I do?",
+      "answer": "Let's troubleshoot this together. First, try restarting your router by unplugging it for 30 seconds. Also, check how many devices are connected as this can affect speed.",
+      "category": "technical",
+      "follow_up": "Has the speed improved after restarting?"
+    },
+    {
+      "question": "Do you offer 5G?",
+      "answer": "Yes, 5G is available on all our SIM plans at no extra cost. Coverage depends on your location - I can check if 5G is available in your area.",
+      "category": "plans",
+      "follow_up": "Would you like me to check 5G coverage for your postcode?"
+    },
+    {
+      "question": "Can I add another user to my account?",
+      "answer": "Yes, you can add additional SIMs to your account. Each additional SIM is £10/month with shared data from your main allowance.",
+      "category": "plans",
+      "follow_up": "Would you like me to add an additional SIM today?"
+    },
+    {
+      "question": "What happens if I go over my data limit?",
+      "answer": "If you exceed your data allowance, you'll be charged £2 per additional GB. Alternatively, you can set a spending cap to prevent overage charges.",
+      "category": "billing",
+      "follow_up": "Would you like me to set up a spending cap for you?"
+    },
+    {
+      "question": "Can I use my phone abroad?",
+      "answer": "Yes, in the EU you can use your plan allowances at no extra cost. For destinations outside the EU, roaming charges apply or you can add a travel pass.",
+      "category": "roaming",
+      "follow_up": "Which country are you travelling to?"
+    },
+    {
+      "question": "How do I get a PAC code?",
+      "answer": "I can generate a PAC code for you now. It's valid for 30 days and you give it to your new provider to keep your number. Would you like me to do that?",
+      "category": "porting",
+      "follow_up": "Before I do, is there anything I can help with to keep you as a customer?"
+    },
+    {
+      "question": "My SIM isn't working in my new phone",
+      "answer": "First, make sure the SIM is inserted correctly. If it still doesn't work, your new phone may need a different SIM size. I can send you a free replacement.",
+      "category": "technical",
+      "follow_up": "What size SIM does your new phone need - nano, micro, or standard?"
+    },
+    {
+      "question": "Can I pause my contract?",
+      "answer": "We don't offer contract pausing, but if you're going abroad for an extended period, I can discuss options like suspending your service temporarily.",
+      "category": "account",
+      "follow_up": "How long would you need to pause for?"
+    },
+    {
+      "question": "How do I upgrade my broadband?",
+      "answer": "Great news - I can check upgrade options for you now. It depends on what speeds are available at your address. What speeds are you hoping for?",
+      "category": "plans",
+      "follow_up": null
+    },
+    {
+      "question": "My direct debit failed, what now?",
+      "answer": "Don't worry, we'll automatically retry the payment in 7 days. To avoid any service interruption, you can also make a one-off payment now over the phone.",
+      "category": "billing",
+      "follow_up": "Would you like to make the payment now to clear this?"
+    },
+    {
+      "question": "How do I report my phone stolen?",
+      "answer": "I'm sorry to hear that. I can suspend your service immediately to prevent any unauthorised use, and I'll order a replacement SIM. Have you reported it to the police?",
+      "category": "security",
+      "follow_up": "Would you like me to suspend the service now?"
+    },
+    {
+      "question": "Can I get a copy of my contract?",
+      "answer": "Of course, I can email a copy of your contract to your registered email address. It should arrive within a few minutes.",
+      "category": "account",
+      "follow_up": "Is {{email}} still the correct email address?"
+    },
+    {
+      "question": "What's my WiFi password?",
+      "answer": "Your WiFi password is printed on the back or bottom of your TeleCorp router. It's labelled as 'Wireless Key' or 'WiFi Password'.",
+      "category": "technical",
+      "follow_up": "If you can't find it, I can guide you through changing it to something memorable."
+    },
+    {
+      "question": "How do I complain?",
+      "answer": "I'm sorry you've had a bad experience. I can log a formal complaint for you now and give you a reference number. Our complaints team will respond within 5 working days.",
+      "category": "complaints",
+      "follow_up": "Can you tell me what's happened so I can log this properly?"
+    }
+  ]
+}

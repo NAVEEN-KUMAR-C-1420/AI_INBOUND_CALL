@@ -1,0 +1,1002 @@
+{
+  "company": {
+    "name": "FinBank UK",
+    "tagline": "Banking Built for Britain",
+    "fca_registration": "FRN 987654",
+    "support_hours": "Mon-Fri 8am-9pm, Sat-Sun 9am-5pm GMT",
+    "fraud_hotline": "+44 800 999 0000 (24/7)",
+    "website": "www.finbank.co.uk",
+    "address": "25 Canary Wharf, London, E14 5AB",
+    "fscs_protected": true,
+    "fscs_limit_gbp": 85000
+  },
+  "persona": {
+    "name": "Priya",
+    "tone": "calm, clear, regulatory-aware, empathetic, never pushy",
+    "greeting": "Good morning, thank you for calling FinBank UK. My name is Priya, how can I help you today?",
+    "greeting_verified": "Thank you for verifying your identity, {customer_name}. I can see your account details now. How can I assist you today?",
+    "hold_message": "I just need to check some details on your account. Please bear with me for a moment.",
+    "fraud_alert_opening": "Before we continue, I need to let you know that we've noticed some unusual activity on your account. For your security, I need to ask you some additional verification questions.",
+    "vulnerable_customer_opening": "I can hear this is a difficult situation for you. Please take your time, and I'm here to help you through this. We have support options available.",
+    "sign_off": "Is there anything else I can help you with today? Thank you for banking with FinBank UK. Take care.",
+    "transfer_message": "I'm going to transfer you to our specialist team who can help you further. Please hold the line."
+  },
+  "products": [
+    {
+      "id": "personal_current_account",
+      "name": "Personal Current Account",
+      "type": "account",
+      "key_features": [
+        "No monthly fees",
+        "Free UK debit card",
+        "Mobile app with instant notifications",
+        "Faster Payments and Direct Debits"
+      ],
+      "interest_rate_percent": 0,
+      "min_amount_gbp": null,
+      "max_amount_gbp": null,
+      "term_options_months": null,
+      "eligibility": [
+        "UK resident aged 18+",
+        "Valid ID and proof of address",
+        "No undischarged bankruptcy"
+      ],
+      "fees": {
+        "setup_gbp": 0,
+        "monthly_gbp": 0,
+        "early_repayment_percent": null
+      },
+      "regulated": true
+    },
+    {
+      "id": "business_current_account",
+      "name": "Business Current Account",
+      "type": "account",
+      "key_features": [
+        "Dedicated business support line",
+        "Integration with accounting software",
+        "Multiple user access",
+        "Free business debit card"
+      ],
+      "interest_rate_percent": 0,
+      "min_amount_gbp": null,
+      "max_amount_gbp": null,
+      "term_options_months": null,
+      "eligibility": [
+        "UK registered business",
+        "Company directors must pass KYC",
+        "Business trading for 6+ months",
+        "Annual turnover under £2m"
+      ],
+      "fees": {
+        "setup_gbp": 0,
+        "monthly_gbp": 9.50,
+        "early_repayment_percent": null
+      },
+      "regulated": true
+    },
+    {
+      "id": "instant_savings_account",
+      "name": "Instant Access Savings",
+      "type": "savings",
+      "key_features": [
+        "Instant access to your money",
+        "No notice period required",
+        "FSCS protected up to £85,000",
+        "Manage online or in-app"
+      ],
+      "interest_rate_percent": {
+        "aer": 3.50,
+        "gross": 3.44
+      },
+      "min_amount_gbp": 1,
+      "max_amount_gbp": 250000,
+      "term_options_months": null,
+      "eligibility": [
+        "Existing FinBank current account holder",
+        "UK resident aged 18+",
+        "One account per customer"
+      ],
+      "fees": {
+        "setup_gbp": 0,
+        "monthly_gbp": 0,
+        "early_repayment_percent": null
+      },
+      "regulated": true
+    },
+    {
+      "id": "fixed_rate_bond",
+      "name": "12 Month Fixed Rate Bond",
+      "type": "savings",
+      "key_features": [
+        "Fixed rate for 12 months",
+        "Higher interest than instant access",
+        "FSCS protected up to £85,000",
+        "Interest paid at maturity"
+      ],
+      "interest_rate_percent": {
+        "aer": 4.75,
+        "gross": 4.65
+      },
+      "min_amount_gbp": 1000,
+      "max_amount_gbp": 500000,
+      "term_options_months": [12],
+      "eligibility": [
+        "UK resident aged 18+",
+        "Funds must remain for full term",
+        "Maximum one bond per customer"
+      ],
+      "fees": {
+        "setup_gbp": 0,
+        "monthly_gbp": 0,
+        "early_repayment_percent": 90
+      },
+      "regulated": true
+    },
+    {
+      "id": "personal_loan",
+      "name": "Personal Loan",
+      "type": "loan",
+      "key_features": [
+        "Borrow from £1,000 to £25,000",
+        "Fixed monthly repayments",
+        "No early repayment fees",
+        "Decision in minutes"
+      ],
+      "interest_rate_percent": 6.9,
+      "min_amount_gbp": 1000,
+      "max_amount_gbp": 25000,
+      "term_options_months": [12, 24, 36, 48, 60],
+      "eligibility": [
+        "UK resident aged 21+",
+        "Minimum income £15,000 per year",
+        "Good credit history",
+        "Existing FinBank customer for 3+ months"
+      ],
+      "fees": {
+        "setup_gbp": 0,
+        "monthly_gbp": 0,
+        "early_repayment_percent": 0
+      },
+      "regulated": true
+    },
+    {
+      "id": "business_loan",
+      "name": "Business Loan",
+      "type": "loan",
+      "key_features": [
+        "Borrow from £5,000 to £250,000",
+        "Flexible repayment terms",
+        "Fixed or variable rates available",
+        "Dedicated relationship manager"
+      ],
+      "interest_rate_percent": 8.5,
+      "min_amount_gbp": 5000,
+      "max_amount_gbp": 250000,
+      "term_options_months": [12, 24, 36, 48, 60, 72, 84],
+      "eligibility": [
+        "UK registered business trading 2+ years",
+        "Annual turnover £50,000+",
+        "Directors pass credit checks",
+        "Business plan required for loans over £50,000"
+      ],
+      "fees": {
+        "setup_gbp": 150,
+        "monthly_gbp": 0,
+        "early_repayment_percent": 2
+      },
+      "regulated": true
+    },
+    {
+      "id": "credit_card",
+      "name": "FinBank Credit Card",
+      "type": "card",
+      "key_features": [
+        "0% on purchases for 12 months",
+        "1% cashback on all spending",
+        "Contactless and Apple Pay ready",
+        "Free supplementary cards"
+      ],
+      "interest_rate_percent": 21.9,
+      "min_amount_gbp": 500,
+      "max_amount_gbp": 15000,
+      "term_options_months": null,
+      "eligibility": [
+        "UK resident aged 18+",
+        "Minimum income £10,000 per year",
+        "No CCJs in last 6 years",
+        "Not currently bankrupt"
+      ],
+      "fees": {
+        "setup_gbp": 0,
+        "monthly_gbp": 0,
+        "early_repayment_percent": null
+      },
+      "regulated": true
+    },
+    {
+      "id": "arranged_overdraft",
+      "name": "Arranged Overdraft",
+      "type": "account",
+      "key_features": [
+        "Flexible borrowing on your current account",
+        "Only pay interest when you use it",
+        "No arrangement fee",
+        "Daily interest calculation"
+      ],
+      "interest_rate_percent": 39.9,
+      "min_amount_gbp": 100,
+      "max_amount_gbp": 5000,
+      "term_options_months": null,
+      "eligibility": [
+        "Existing FinBank current account holder",
+        "Account in good standing for 3+ months",
+        "Regular income credited to account",
+        "Pass credit assessment"
+      ],
+      "fees": {
+        "setup_gbp": 0,
+        "monthly_gbp": 0,
+        "early_repayment_percent": null
+      },
+      "regulated": true
+    }
+  ],
+  "intents": [
+    {
+      "id": "balance_query",
+      "display_name": "Balance Query",
+      "category": "account",
+      "requires_identity_verification": true,
+      "keywords": ["balance", "how much", "what's in my account", "money", "funds", "available", "check balance", "account balance", "current balance", "remaining", "left", "statement"],
+      "resolution_steps": [
+        "1. Verify customer identity using security questions",
+        "2. Access customer's account overview",
+        "3. Provide current balance and available balance if different",
+        "4. Mention any pending transactions if relevant",
+        "5. Offer to send SMS balance alert setup",
+        "6. Ask if they need anything else"
+      ],
+      "avg_handle_time_seconds": 180,
+      "escalation_threshold": 2,
+      "escalate_to": "relationship_manager",
+      "sample_customer_phrases": [
+        "Can you tell me my account balance?",
+        "How much money do I have in my account?",
+        "What's my available balance right now?",
+        "I need to check my balance before making a payment",
+        "Can you confirm what's in my current account?"
+      ],
+      "regulatory_notes": "Balance information is personal financial data. Verify identity before disclosure. Log all balance enquiries.",
+      "auto_resolvable": true
+    },
+    {
+      "id": "transaction_dispute",
+      "display_name": "Transaction Dispute",
+      "category": "disputes",
+      "requires_identity_verification": true,
+      "keywords": ["dispute", "didn't authorise", "fraud", "wrong transaction", "don't recognise", "not mine", "charged twice", "double charge", "refund", "chargeback", "unknown", "suspicious"],
+      "resolution_steps": [
+        "1. Verify customer identity with enhanced security",
+        "2. Identify the specific transaction(s) being disputed",
+        "3. Determine if this is potential fraud or merchant dispute",
+        "4. For fraud: freeze card immediately and raise fraud case",
+        "5. For merchant dispute: explain chargeback process and timelines",
+        "6. Provide case reference number and expected resolution time"
+      ],
+      "avg_handle_time_seconds": 480,
+      "escalation_threshold": 1,
+      "escalate_to": "fraud_team",
+      "sample_customer_phrases": [
+        "There's a transaction on my account I don't recognise",
+        "I've been charged twice for the same purchase",
+        "Someone has used my card without permission",
+        "I need to dispute a payment that went wrong",
+        "I've noticed some suspicious activity on my account"
+      ],
+      "regulatory_notes": "PSR 2017 requires provisional refund within 15 days for unauthorised transactions. Document all dispute details carefully.",
+      "auto_resolvable": false
+    },
+    {
+      "id": "card_freeze",
+      "display_name": "Card Freeze",
+      "category": "security",
+      "requires_identity_verification": true,
+      "keywords": ["freeze", "block", "stop", "lost card", "stolen", "cancel card", "suspend", "lock", "misplaced", "can't find", "missing card"],
+      "resolution_steps": [
+        "1. Verify customer identity immediately",
+        "2. Freeze the card instantly while on the call",
+        "3. Confirm which card if customer has multiple",
+        "4. Ask if this is temporary freeze or permanent block",
+        "5. For lost/stolen: offer replacement card (3-5 days delivery)",
+        "6. Review recent transactions for any suspicious activity"
+      ],
+      "avg_handle_time_seconds": 240,
+      "escalation_threshold": 2,
+      "escalate_to": "fraud_team",
+      "sample_customer_phrases": [
+        "I've lost my card and need to freeze it",
+        "My wallet was stolen, please block my card",
+        "Can you temporarily freeze my debit card?",
+        "I can't find my card, I want to stop it being used",
+        "Someone might have my card details, please block it"
+      ],
+      "regulatory_notes": "Card freeze must be immediate upon verified request. Offer crime reference number guidance for stolen cards.",
+      "auto_resolvable": true
+    },
+    {
+      "id": "account_freeze",
+      "display_name": "Account Freeze",
+      "category": "security",
+      "requires_identity_verification": true,
+      "keywords": ["freeze account", "lock account", "suspend account", "stop all", "block everything", "compromised", "hacked", "someone accessed", "full freeze"],
+      "resolution_steps": [
+        "1. Verify customer identity with enhanced security",
+        "2. Understand the reason for account freeze request",
+        "3. Explain implications (Direct Debits will fail, no access)",
+        "4. If confirmed, apply full account freeze immediately",
+        "5. Document the reason and customer's contact details",
+        "6. Explain the unfreeze process and required documentation"
+      ],
+      "avg_handle_time_seconds": 360,
+      "escalation_threshold": 1,
+      "escalate_to": "fraud_team",
+      "sample_customer_phrases": [
+        "I need to freeze my entire account",
+        "Someone has hacked my online banking",
+        "Please lock everything on my account",
+        "I think my account has been compromised",
+        "Stop all transactions on my account immediately"
+      ],
+      "regulatory_notes": "Full account freeze is a serious action. Ensure customer understands all implications. May require fraud team involvement.",
+      "auto_resolvable": false
+    },
+    {
+      "id": "loan_emi_query",
+      "display_name": "Loan EMI Query",
+      "category": "loans",
+      "requires_identity_verification": true,
+      "keywords": ["loan payment", "EMI", "monthly payment", "instalment", "repayment", "when is payment", "how much left", "remaining balance", "pay off", "loan balance", "next payment"],
+      "resolution_steps": [
+        "1. Verify customer identity",
+        "2. Access loan account details",
+        "3. Provide current outstanding balance",
+        "4. Confirm next payment date and amount",
+        "5. Explain settlement figure if customer asks",
+        "6. Offer payment holiday information if appropriate"
+      ],
+      "avg_handle_time_seconds": 240,
+      "escalation_threshold": 3,
+      "escalate_to": "collections",
+      "sample_customer_phrases": [
+        "When is my next loan payment due?",
+        "How much do I still owe on my loan?",
+        "Can you tell me my remaining loan balance?",
+        "I want to know my monthly repayment amount",
+        "What's the settlement figure to pay off my loan early?"
+      ],
+      "regulatory_notes": "Always provide accurate settlement figures. Include any early repayment charges in quotes.",
+      "auto_resolvable": true
+    },
+    {
+      "id": "loan_application",
+      "display_name": "Loan Application",
+      "category": "loans",
+      "requires_identity_verification": true,
+      "keywords": ["apply loan", "borrow", "need money", "loan application", "get a loan", "personal loan", "new loan", "how much can I borrow", "loan options", "credit", "finance"],
+      "resolution_steps": [
+        "1. Verify customer identity",
+        "2. Understand the loan purpose and amount needed",
+        "3. Check customer's eligibility based on account history",
+        "4. Explain available loan products and rates",
+        "5. If eligible, guide through application process",
+        "6. Explain credit check implications and decision timeline"
+      ],
+      "avg_handle_time_seconds": 600,
+      "escalation_threshold": 2,
+      "escalate_to": "relationship_manager",
+      "sample_customer_phrases": [
+        "I'd like to apply for a personal loan",
+        "How much could I borrow?",
+        "What are your loan interest rates?",
+        "I need to borrow £5,000 for home improvements",
+        "Can I get a loan decision today?"
+      ],
+      "regulatory_notes": "FCA CONC rules apply. Assess affordability. Provide adequate explanation. Allow cooling-off period.",
+      "auto_resolvable": false
+    },
+    {
+      "id": "collections_payment",
+      "display_name": "Collections Payment",
+      "category": "collections",
+      "requires_identity_verification": true,
+      "keywords": ["overdue", "arrears", "missed payment", "behind", "late", "collections", "debt", "pay arrears", "catch up", "warning letter", "default"],
+      "resolution_steps": [
+        "1. Verify customer identity with care and empathy",
+        "2. Confirm the overdue amount clearly",
+        "3. Ask if they're able to pay the full amount today",
+        "4. If not, explore payment plan options (up to 12 months)",
+        "5. Check for signs of financial hardship - offer support",
+        "6. Process payment or set up arrangement"
+      ],
+      "avg_handle_time_seconds": 540,
+      "escalation_threshold": 2,
+      "escalate_to": "collections",
+      "sample_customer_phrases": [
+        "I've received a letter about missed payments",
+        "I'm behind on my loan and need to sort it out",
+        "Can I set up a payment plan for my arrears?",
+        "I want to pay what I owe",
+        "My account is in default, what can I do?"
+      ],
+      "regulatory_notes": "FCA CONC 7 applies. Treat customers in financial difficulty with forbearance. Identify vulnerability.",
+      "auto_resolvable": false
+    },
+    {
+      "id": "kyc_update",
+      "display_name": "KYC Update",
+      "category": "compliance",
+      "requires_identity_verification": true,
+      "keywords": ["update details", "ID expired", "proof of address", "documents", "verify", "KYC", "identity", "passport", "driving licence", "utility bill", "update address"],
+      "resolution_steps": [
+        "1. Verify current customer identity",
+        "2. Explain what documents are needed and why",
+        "3. Provide options for submitting documents (app, post, branch)",
+        "4. If account is restricted, explain the restrictions",
+        "5. Confirm expected processing time (2-5 business days)",
+        "6. Set expectation for confirmation communication"
+      ],
+      "avg_handle_time_seconds": 300,
+      "escalation_threshold": 3,
+      "escalate_to": "compliance",
+      "sample_customer_phrases": [
+        "I need to update my address on my account",
+        "My passport has expired, do you need a new one?",
+        "I received a letter asking for ID documents",
+        "How do I verify my identity?",
+        "My account is restricted until I provide documents"
+      ],
+      "regulatory_notes": "MLR 2017 compliance. All KYC documents must be verified. Record retention per policy.",
+      "auto_resolvable": true
+    },
+    {
+      "id": "fraud_report",
+      "display_name": "Fraud Report",
+      "category": "fraud",
+      "requires_identity_verification": true,
+      "keywords": ["fraud", "scam", "stolen", "hacked", "phishing", "authorised push payment", "APP fraud", "not me", "someone else", "compromised", "impersonation"],
+      "resolution_steps": [
+        "1. Remain calm and reassure the customer",
+        "2. Verify identity with enhanced security questions",
+        "3. Freeze affected accounts/cards immediately",
+        "4. Document all fraud details: what, when, how much",
+        "5. Raise urgent fraud case with reference number",
+        "6. Warm transfer to fraud team for investigation"
+      ],
+      "avg_handle_time_seconds": 600,
+      "escalation_threshold": 1,
+      "escalate_to": "fraud_team",
+      "sample_customer_phrases": [
+        "I think I've been a victim of fraud",
+        "Someone has stolen money from my account",
+        "I received a call claiming to be from the bank and gave my details",
+        "I've been scammed and need help",
+        "There are transactions I definitely didn't make"
+      ],
+      "regulatory_notes": "PSR 2017 and CRM Code apply. Document everything. Time-critical - customer may still be in contact with fraudster.",
+      "auto_resolvable": false
+    },
+    {
+      "id": "account_closure",
+      "display_name": "Account Closure",
+      "category": "admin",
+      "requires_identity_verification": true,
+      "keywords": ["close account", "cancel", "close my account", "shut account", "end account", "terminate", "don't want account", "switch bank", "leaving"],
+      "resolution_steps": [
+        "1. Verify customer identity",
+        "2. Understand the reason for closure (retention opportunity)",
+        "3. Explain any implications (regular payments, linked products)",
+        "4. Check account balance and any pending transactions",
+        "5. Process closure request or transfer to retention if appropriate",
+        "6. Confirm closure timeline and final statement"
+      ],
+      "avg_handle_time_seconds": 420,
+      "escalation_threshold": 1,
+      "escalate_to": "relationship_manager",
+      "sample_customer_phrases": [
+        "I want to close my account",
+        "How do I close my current account?",
+        "I'm switching to another bank",
+        "Please close all my accounts with you",
+        "I no longer need this account"
+      ],
+      "regulatory_notes": "CASS switching service may apply. Ensure no outstanding obligations. Provide closure confirmation in writing.",
+      "auto_resolvable": false
+    },
+    {
+      "id": "overdraft_query",
+      "display_name": "Overdraft Query",
+      "category": "account",
+      "requires_identity_verification": true,
+      "keywords": ["overdraft", "overdrawn", "negative", "in the red", "overdraft limit", "increase overdraft", "reduce overdraft", "overdraft fee", "unarranged"],
+      "resolution_steps": [
+        "1. Verify customer identity",
+        "2. Check current overdraft limit and usage",
+        "3. For increase requests: check eligibility and affordability",
+        "4. For queries about fees: explain charges clearly",
+        "5. For unarranged overdraft: discuss getting back in credit",
+        "6. Offer budgeting support if customer appears to be struggling"
+      ],
+      "avg_handle_time_seconds": 300,
+      "escalation_threshold": 2,
+      "escalate_to": "collections",
+      "sample_customer_phrases": [
+        "What's my overdraft limit?",
+        "Can I increase my overdraft?",
+        "I've gone into my unarranged overdraft",
+        "How much are you charging me for overdraft?",
+        "I want to reduce my overdraft limit"
+      ],
+      "regulatory_notes": "FCA overdraft rules apply. Clear interest rate disclosure. 10-day buffer for repeat use.",
+      "auto_resolvable": true
+    },
+    {
+      "id": "international_transfer",
+      "display_name": "International Transfer",
+      "category": "payments",
+      "requires_identity_verification": true,
+      "keywords": ["international", "overseas", "abroad", "foreign", "transfer money", "send money", "SWIFT", "IBAN", "exchange rate", "outside UK", "wire transfer"],
+      "resolution_steps": [
+        "1. Verify customer identity with enhanced security",
+        "2. Collect recipient details: name, bank, IBAN/account, SWIFT/BIC",
+        "3. Confirm amount and currency",
+        "4. Explain fees and exchange rate applied",
+        "5. Confirm estimated arrival time (1-5 days depending on destination)",
+        "6. Provide transaction reference number"
+      ],
+      "avg_handle_time_seconds": 480,
+      "escalation_threshold": 2,
+      "escalate_to": "fraud_team",
+      "sample_customer_phrases": [
+        "I need to send money overseas",
+        "How do I make an international transfer?",
+        "What's the exchange rate for euros?",
+        "How long will it take to send money to India?",
+        "What fees do you charge for international payments?"
+      ],
+      "regulatory_notes": "Cross-Border Payments Regulation applies. Declare all fees upfront. Check sanctions list for destination.",
+      "auto_resolvable": true
+    },
+    {
+      "id": "complaint_formal",
+      "display_name": "Formal Complaint",
+      "category": "complaints",
+      "requires_identity_verification": true,
+      "keywords": ["complaint", "formal complaint", "ombudsman", "FCA", "escalate", "unacceptable", "disgusted", "appalling", "manager", "compensation", "sue"],
+      "resolution_steps": [
+        "1. Apologise sincerely and listen without interrupting",
+        "2. Verify customer identity",
+        "3. Document the full complaint in detail",
+        "4. Assign unique complaint reference number",
+        "5. Explain the complaints process and 8-week timeline",
+        "6. Offer immediate resolution if within authority, else escalate"
+      ],
+      "avg_handle_time_seconds": 720,
+      "escalation_threshold": 1,
+      "escalate_to": "complaints",
+      "sample_customer_phrases": [
+        "I want to make a formal complaint",
+        "This is unacceptable and I want it escalated",
+        "I'm going to report you to the Financial Ombudsman",
+        "I demand to speak to a manager about this",
+        "I want compensation for the distress caused"
+      ],
+      "regulatory_notes": "FCA DISP rules apply. 8-week resolution target. Provide FOS details in final response. Log all complaints on central register.",
+      "auto_resolvable": false
+    },
+    {
+      "id": "beneficiary_add",
+      "display_name": "Add Beneficiary",
+      "category": "payments",
+      "requires_identity_verification": true,
+      "keywords": ["add payee", "new payee", "beneficiary", "add account", "set up payment", "new recipient", "add someone", "regular payment"],
+      "resolution_steps": [
+        "1. Verify customer identity",
+        "2. Collect new beneficiary details: name, sort code, account number",
+        "3. Confirm the customer knows the recipient personally",
+        "4. Check for common fraud indicators (rushed, unusual amounts)",
+        "5. Add beneficiary with 24-hour cooling off period for new payees",
+        "6. Confirm addition and remind of fraud risks"
+      ],
+      "avg_handle_time_seconds": 300,
+      "escalation_threshold": 2,
+      "escalate_to": "fraud_team",
+      "sample_customer_phrases": [
+        "I want to add a new payee to my account",
+        "How do I set up a payment to someone new?",
+        "I need to add my daughter's account as a beneficiary",
+        "Can you add this account so I can transfer money?",
+        "I want to set up a regular payment to a new account"
+      ],
+      "regulatory_notes": "Confirmation of Payee requirements apply. Check for APP fraud indicators. FCA consumer duty applies.",
+      "auto_resolvable": true
+    }
+  ],
+  "identity_verification": {
+    "mandatory_for": ["balance_query", "transaction_dispute", "card_freeze", "account_freeze", "loan_emi_query", "loan_application", "collections_payment", "kyc_update", "fraud_report", "account_closure", "overdraft_query", "international_transfer", "complaint_formal", "beneficiary_add"],
+    "script_intro": "For your security, I need to verify some details before I can access your account.",
+    "step1": {
+      "question": "Can you please confirm your full name and date of birth?",
+      "field": "full_name + date_of_birth"
+    },
+    "step2": {
+      "question": "Thank you. Can you confirm the last 4 digits of your registered phone number?",
+      "field": "registered phone last 4 digits"
+    },
+    "step3": {
+      "question": "And finally, what is the sort code on your main account with us?",
+      "field": "sort_code"
+    },
+    "pass_script": "Thank you for confirming those details. I've now verified your identity and can access your account.",
+    "fail_script": "I'm sorry, but the details you've provided don't match what we have on file. For security reasons, I'm unable to proceed.",
+    "max_attempts": 3,
+    "lockout_script": "I'm sorry, but as we've been unable to verify your identity after multiple attempts, I'll need to ask you to visit a branch with valid photo ID. This is for your own security."
+  },
+  "collections_scripts": {
+    "first_reminder": {
+      "script": "I'm calling regarding your FinBank account. I can see there's a payment of £{amount} that's now overdue. I wanted to check if everything is okay and see how we can help you get this sorted.",
+      "tone_guidance": "Friendly and non-threatening. This may be a simple oversight.",
+      "do_not_say": ["debt collector", "legal action", "court", "bailiff", "credit file damage"],
+      "offer_available": true,
+      "max_payment_plan_months": 3
+    },
+    "second_reminder": {
+      "script": "I'm following up on our previous conversation about the overdue balance on your account. The amount outstanding is now £{amount}. It's really important we get this resolved to avoid any impact on your account. Can we discuss your options today?",
+      "tone_guidance": "More serious but still supportive. Emphasise wanting to help.",
+      "do_not_say": ["threaten", "harassment", "we will take everything", "irresponsible"],
+      "offer_available": true,
+      "max_payment_plan_months": 6
+    },
+    "pre_legal": {
+      "script": "I need to discuss an urgent matter regarding your account. The overdue balance of £{amount} has now reached a stage where we need to consider further action. Before we do that, I really want to explore all options with you today to find a solution.",
+      "tone_guidance": "Serious but fair. Customer must understand consequences while being offered support.",
+      "do_not_say": ["prison", "police", "criminal", "destroy your life"],
+      "offer_available": true,
+      "max_payment_plan_months": 12
+    },
+    "payment_plan_offer": {
+      "script": "I understand that paying the full amount right now might not be possible. We can set up a payment plan to spread this over a longer period. Based on what you can afford, we could look at monthly payments of around £{suggested_amount}. Would that work for you?",
+      "tone_guidance": "Collaborative and solution-focused. Work with the customer.",
+      "do_not_say": ["must", "demand", "non-negotiable", "final offer"],
+      "offer_available": true,
+      "max_payment_plan_months": 12
+    },
+    "hardship_protocol": {
+      "script": "I can hear that things are difficult for you right now, and I want you to know we're here to help. We have a specialist team who support customers facing financial hardship. They can look at options like reduced payments, breathing space, or connecting you with free debt advice services. Would you like me to refer you to them?",
+      "tone_guidance": "Compassionate and supportive. No pressure. Offer genuine help.",
+      "do_not_say": ["your fault", "should have", "irresponsible", "why didn't you"],
+      "offer_available": true,
+      "max_payment_plan_months": 24
+    }
+  },
+  "retention_offers": [
+    {
+      "id": "fee_waiver",
+      "trigger": "Customer mentions closing account due to fees",
+      "offer_text": "I'd really like to keep you as a customer. I can waive your account fees for the next 12 months while we review whether a different account type might suit you better. Would that help?",
+      "approval_required": false,
+      "max_uses_per_customer": 1,
+      "regulatory_approved": true
+    },
+    {
+      "id": "rate_match",
+      "trigger": "Customer found better savings rate elsewhere",
+      "offer_text": "I understand you've found a better rate. While I can't always match competitors, I can offer you our loyalty bonus rate which adds an extra 0.25% AER to your current rate. This is only available to existing customers.",
+      "approval_required": true,
+      "max_uses_per_customer": 1,
+      "regulatory_approved": true
+    },
+    {
+      "id": "overdraft_restructure",
+      "trigger": "Customer struggling with overdraft fees",
+      "offer_text": "I can see the overdraft charges have been adding up. I can restructure your overdraft to a lower limit with a reduced interest rate, which would save you money each month. Shall I explain how this would work?",
+      "approval_required": false,
+      "max_uses_per_customer": 2,
+      "regulatory_approved": true
+    },
+    {
+      "id": "loan_rate_reduction",
+      "trigger": "Customer considering early loan settlement to move elsewhere",
+      "offer_text": "Before you settle early, I can check if you're eligible for our existing customer loyalty rate. This could reduce your interest rate and monthly payment, saving you money over the remaining term.",
+      "approval_required": true,
+      "max_uses_per_customer": 1,
+      "regulatory_approved": true
+    },
+    {
+      "id": "complaint_goodwill",
+      "trigger": "Customer upset after service failure",
+      "offer_text": "I'm really sorry for the experience you've had. As a gesture of goodwill, I've applied a £50 credit to your account. I hope this goes some way to restoring your confidence in us.",
+      "approval_required": false,
+      "max_uses_per_customer": 2,
+      "regulatory_approved": true
+    },
+    {
+      "id": "premium_upgrade",
+      "trigger": "High-value customer considering leaving",
+      "offer_text": "You've been a valued customer for several years. I can upgrade you to our Premium service tier at no extra cost, which includes a dedicated relationship manager and priority support. Would that interest you?",
+      "approval_required": true,
+      "max_uses_per_customer": 1,
+      "regulatory_approved": true
+    }
+  ],
+  "escalation": {
+    "fraud_team": {
+      "team_name": "Fraud Prevention Team",
+      "priority": 1,
+      "avg_wait_minutes": 2,
+      "when_to_escalate": [
+        "Any suspected fraudulent transaction",
+        "Customer reports scam or phishing",
+        "Account takeover suspected",
+        "Multiple failed verification attempts"
+      ],
+      "contact_method": "warm_transfer"
+    },
+    "collections": {
+      "team_name": "Collections & Recoveries",
+      "priority": 2,
+      "avg_wait_minutes": 5,
+      "when_to_escalate": [
+        "Balance over 60 days overdue",
+        "Payment arrangement breach",
+        "Customer refuses to engage",
+        "Legal action consideration"
+      ],
+      "contact_method": "warm_transfer"
+    },
+    "complaints": {
+      "team_name": "Customer Relations",
+      "priority": 1,
+      "avg_wait_minutes": 10,
+      "when_to_escalate": [
+        "Formal complaint requested",
+        "FOS or FCA mentioned",
+        "Compensation claim",
+        "Media or social escalation threat"
+      ],
+      "contact_method": "warm_transfer"
+    },
+    "relationship_manager": {
+      "team_name": "Relationship Management",
+      "priority": 3,
+      "avg_wait_minutes": 15,
+      "when_to_escalate": [
+        "High-value customer issue",
+        "Complex product query",
+        "Retention opportunity",
+        "Business banking enquiry"
+      ],
+      "contact_method": "callback"
+    },
+    "compliance": {
+      "team_name": "Compliance & Risk",
+      "priority": 2,
+      "avg_wait_minutes": 30,
+      "when_to_escalate": [
+        "Suspicious activity report required",
+        "PEP or sanctions concern",
+        "Complex KYC case",
+        "Regulatory enquiry"
+      ],
+      "contact_method": "callback"
+    },
+    "supervisor": {
+      "team_name": "Duty Supervisor",
+      "priority": 1,
+      "avg_wait_minutes": 3,
+      "when_to_escalate": [
+        "Customer demands manager",
+        "Safeguarding concern",
+        "Abusive customer",
+        "Decision authority exceeded"
+      ],
+      "contact_method": "warm_transfer"
+    }
+  },
+  "compliance": {
+    "call_recording_disclaimer": "For quality and training purposes, this call will be recorded and may be monitored.",
+    "gdpr_script": "I need to let you know that we'll use your personal information to help with your enquiry today. Our full privacy notice is on our website. Is that okay with you?",
+    "fca_disclosure": "FinBank UK is authorised by the Prudential Regulation Authority and regulated by the Financial Conduct Authority and the Prudential Regulation Authority. Our FCA registration number is 987654.",
+    "vulnerable_customer_protocol": [
+      "1. Listen for signs of vulnerability: distress, confusion, mention of illness or bereavement",
+      "2. Slow down the conversation and offer to take breaks",
+      "3. Ask if they have someone with them who can help",
+      "4. Flag the account for vulnerable customer treatment",
+      "5. Offer to arrange a callback at a more suitable time",
+      "6. Consider referral to specialist support team"
+    ],
+    "financial_hardship_policy": "If a customer indicates they are struggling financially, we must offer forbearance options including payment holidays, reduced payments, breathing space referral, and connection to free debt advice services such as StepChange or Citizens Advice.",
+    "cooling_off_period_days": 14,
+    "data_retention_years": 7,
+    "tcf_statement": "We are committed to Treating Customers Fairly. This means putting customers at the heart of everything we do, providing clear information, suitable products, and excellent service before, during and after the sale."
+  },
+  "sentiment_triggers": {
+    "financial_distress": [
+      "I can't afford",
+      "lost my job",
+      "made redundant",
+      "struggling to pay",
+      "can't make ends meet",
+      "choosing between food and bills",
+      "debt problems",
+      "mental health",
+      "can't cope",
+      "don't know what to do"
+    ],
+    "frustrated": [
+      "I've been waiting",
+      "called three times",
+      "nobody knows anything",
+      "passed around",
+      "still not resolved",
+      "what's the point",
+      "waste of time",
+      "very disappointed",
+      "not good enough",
+      "getting nowhere"
+    ],
+    "angry": [
+      "absolutely furious",
+      "disgusted",
+      "worst bank ever",
+      "complete shambles",
+      "I want to speak to a manager now",
+      "going to the newspapers",
+      "report you to the FCA",
+      "legal action",
+      "this is a disgrace",
+      "I'm recording this call"
+    ],
+    "fraud_concern": [
+      "someone called pretending to be you",
+      "I gave them my details",
+      "clicked on a link",
+      "transferred money to",
+      "they said my account was compromised",
+      "I think I've been scammed",
+      "the person said they were from the bank",
+      "remote access",
+      "TeamViewer",
+      "they're still on the phone with me"
+    ],
+    "satisfied": [
+      "thank you so much",
+      "you've been really helpful",
+      "that's exactly what I needed",
+      "excellent service",
+      "I'll recommend you"
+    ]
+  },
+  "faq": [
+    {
+      "question": "What's my account balance?",
+      "answer": "I can see your current balance is £{balance}. Your available balance, which takes into account any pending transactions, is £{available_balance}.",
+      "category": "account",
+      "follow_up": "Would you like me to go through any recent transactions?"
+    },
+    {
+      "question": "When will my payment arrive?",
+      "answer": "Faster Payments to UK accounts typically arrive within 2 hours. International payments can take 1-5 working days depending on the destination country and currency.",
+      "category": "payments",
+      "follow_up": "Would you like me to check the status of a specific payment?"
+    },
+    {
+      "question": "How do I reset my online banking password?",
+      "answer": "You can reset your password through the app or website by clicking 'Forgotten password'. You'll need access to your registered mobile number for the verification code.",
+      "category": "security",
+      "follow_up": "Would you like me to send the reset link to your registered email?"
+    },
+    {
+      "question": "What are your savings rates?",
+      "answer": "Our Instant Access Savings pays 3.50% AER with unlimited withdrawals. Our 12-Month Fixed Rate Bond pays 4.75% AER. Both are FSCS protected up to £85,000.",
+      "category": "products",
+      "follow_up": "Would you like me to help you open a savings account?"
+    },
+    {
+      "question": "How do I report a lost or stolen card?",
+      "answer": "I can freeze your card right now to prevent any unauthorised use. Once frozen, I can order a replacement which will arrive in 3-5 working days.",
+      "category": "security",
+      "follow_up": "Would you like me to freeze the card now?"
+    },
+    {
+      "question": "What's your overdraft interest rate?",
+      "answer": "Our arranged overdraft has an interest rate of 39.9% EAR variable. Interest is calculated daily on the amount of overdraft used.",
+      "category": "account",
+      "follow_up": "Would you like to review your overdraft limit?"
+    },
+    {
+      "question": "How do I make an international payment?",
+      "answer": "You can make international payments through online banking or the app. You'll need the recipient's name, IBAN or account number, and SWIFT/BIC code. Fees start from £5 for EU payments.",
+      "category": "payments",
+      "follow_up": "Would you like me to help you set up the payment?"
+    },
+    {
+      "question": "Can I change my payment date?",
+      "answer": "Yes, you can change your loan or credit card payment date once per year. The change will take effect from your next billing cycle.",
+      "category": "account",
+      "follow_up": "What date would work better for you?"
+    },
+    {
+      "question": "How do I close my account?",
+      "answer": "I can help you close your account today. First, the account needs to be brought to a zero balance. Any Direct Debits or standing orders will need to be moved to another account.",
+      "category": "account",
+      "follow_up": "Can I ask what's prompting you to close the account?"
+    },
+    {
+      "question": "What is the FSCS?",
+      "answer": "The Financial Services Compensation Scheme protects your eligible deposits up to £85,000 per person, per banking licence. This means if anything happened to FinBank, your money is protected.",
+      "category": "general",
+      "follow_up": null
+    },
+    {
+      "question": "How do I increase my overdraft?",
+      "answer": "I can check your eligibility for an overdraft increase right now. This will depend on your credit score and account history. Any increase would be subject to a soft credit check.",
+      "category": "account",
+      "follow_up": "Would you like me to check what overdraft limit you'd be eligible for?"
+    },
+    {
+      "question": "Why has my payment been declined?",
+      "answer": "Payments can be declined for several reasons: insufficient funds, card frozen, spending limit reached, or fraud prevention. Let me check your account to see what happened.",
+      "category": "payments",
+      "follow_up": null
+    },
+    {
+      "question": "How do I apply for a loan?",
+      "answer": "I can start a loan application for you now. We offer personal loans from £1,000 to £25,000 at representative 6.9% APR. The application takes about 10 minutes and you'll get an instant decision.",
+      "category": "products",
+      "follow_up": "How much are you looking to borrow and over what term?"
+    },
+    {
+      "question": "What happens if I miss a payment?",
+      "answer": "If you miss a payment, we'll contact you to arrange repayment. There may be late payment fees and it could affect your credit score. If you're struggling, please let us know so we can help.",
+      "category": "collections",
+      "follow_up": "Are you concerned about making an upcoming payment?"
+    },
+    {
+      "question": "How do I set up a standing order?",
+      "answer": "You can set up a standing order through online banking or the app. Go to 'Payments', then 'Standing Orders', and enter the recipient details, amount, and frequency.",
+      "category": "payments",
+      "follow_up": "Would you like me to guide you through setting one up?"
+    },
+    {
+      "question": "Can I get a statement?",
+      "answer": "You can view and download statements through online banking or the app for the last 7 years. I can also arrange for paper statements to be posted to you.",
+      "category": "account",
+      "follow_up": "Would you like me to send a statement to your registered address?"
+    },
+    {
+      "question": "How do I dispute a transaction?",
+      "answer": "I can help you dispute a transaction. I'll need the transaction date, amount, and why you're disputing it. For card payments, you may be able to claim through our chargeback process.",
+      "category": "disputes",
+      "follow_up": "Can you tell me which transaction you'd like to dispute?"
+    },
+    {
+      "question": "What are your branch opening hours?",
+      "answer": "Most of our branches are open Monday to Friday 9am-5pm, and Saturday 9am-12:30pm. You can find your nearest branch and its specific hours on our website or app.",
+      "category": "general",
+      "follow_up": "Would you like me to find the nearest branch to you?"
+    },
+    {
+      "question": "How do I update my personal details?",
+      "answer": "You can update your email, phone number, and marketing preferences through online banking. For changes to your name or address, we'll need to verify some documents.",
+      "category": "account",
+      "follow_up": "What details would you like to update?"
+    },
+    {
+      "question": "Is my money safe with FinBank?",
+      "answer": "Yes, your eligible deposits are protected up to £85,000 by the Financial Services Compensation Scheme (FSCS). We're also authorised and regulated by the FCA and PRA.",
+      "category": "general",
+      "follow_up": null
+    }
+  ]
+}

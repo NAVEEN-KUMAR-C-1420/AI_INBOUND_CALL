@@ -1,0 +1,133 @@
+Build a full-stack AI Call Assistant web app with the following requirements:
+
+### Tech Stack:
+
+* Backend: FastAPI (Python)
+* Frontend: React (Vite) with Tailwind CSS
+* AI Model: Ollama (local LLaMA3)
+* No external paid APIs
+* Use browser-based SpeechRecognition for input
+* Use browser SpeechSynthesis for output
+
+---
+
+### Core Features:
+
+1. 🎤 Microphone Input (Customer)
+
+* Use Web Speech API (SpeechRecognition)
+* Continuous listening
+* Convert speech to text in real time
+* Display live transcript in UI as "Customer"
+
+---
+
+2. 📝 Live Transcript UI
+
+* Show conversation like chat:
+  Customer messages on left
+  AI messages on right
+* Auto-scroll
+* Add timestamps
+* Show "AI is thinking..." while waiting
+
+---
+
+3. 🧠 AI Processing (Backend)
+
+* Create FastAPI server with endpoint:
+  POST /process
+
+* Input:
+  {
+  "text": "customer speech"
+  }
+
+* Call Ollama locally using:
+  http://localhost:11434/api/generate
+
+* Use model: llama3
+
+* Prompt should:
+
+  * Act like telecom call center agent
+  * Be polite and helpful
+  * Detect intent and sentiment internally
+  * Respond clearly in 1–2 sentences (low latency)
+
+* Return:
+  {
+  "response": "AI reply"
+  }
+
+---
+
+4. 🔊 AI Voice Output
+
+* Use browser SpeechSynthesis
+* Speak AI response immediately
+* Ensure minimal delay
+
+---
+
+5. ⚡ Low Latency Optimization
+
+* Do NOT stream audio to backend
+* Only send text
+* Keep responses short
+* Show transcript instantly before AI response arrives
+
+---
+
+6. 🎨 UI Requirements
+
+* Dark theme (Tailwind)
+* Sections:
+
+  * Call status ("Connected")
+  * Live transcript panel (main area)
+  * Mic button (start/stop)
+* Add animations:
+
+  * Pulsing mic when listening
+  * Typing indicator for AI
+
+---
+
+7. 🧩 Project Structure:
+
+backend/
+main.py
+
+frontend/
+src/
+App.jsx
+components/
+Transcript.jsx
+MicButton.jsx
+
+---
+
+8. 🧪 Bonus (if possible)
+
+* Add sentiment detection (basic keyword-based)
+* Show "Angry / Neutral / Happy" label
+
+---
+
+### Output Requirements:
+
+* Generate complete working code for:
+
+  1. FastAPI backend
+  2. React frontend
+* Include instructions to run both
+
+---
+
+### Constraints:
+
+* Must run locally
+* Must be simple and fast
+* Avoid complex dependencies
+* Prioritize working demo over perfection

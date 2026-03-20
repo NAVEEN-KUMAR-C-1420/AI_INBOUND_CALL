@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+venv/
+ENV/
+env/
+.venv
+
+# Virtual environments
+.virtualenv
+*.venv
+
+# Python environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+dist/
+build/
+
+# Logs
+*.log
+server.log
+
+# Cache
+.pytest_cache/
+.coverage
+
+# Build outputs (frontend)
+frontend/dist/
+frontend/node_modules/
+
+# Database (generated)
+# telecom_ai.db  # Can be generated from seed.py
+
+# Temp files
+*.tmp
+*.temp
+.tmp/
+
+# IDE-specific
+.editorconfig.local
