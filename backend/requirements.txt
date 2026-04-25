@@ -5,5 +5,8 @@ pydantic==2.5.3
 httpx==0.26.0
 python-multipart==0.0.6
 email-validator==2.1.0.post1
+langdetect==1.0.9
 sentence-transformers==3.0.1
 numpy==1.24.3
+python-dotenv==1.0.0
+

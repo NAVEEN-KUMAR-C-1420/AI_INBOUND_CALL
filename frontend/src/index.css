@@ -1,18 +1,222 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+:root {
+  --bg-base: #0d1321;
+  --bg-soft: #121c2e;
+  --card: rgba(16, 25, 41, 0.88);
+  --card-border: rgba(111, 173, 255, 0.22);
+  --text-main: #e6edf9;
+  --text-soft: #afbdd8;
+  --accent: #54c6eb;
+  --accent-strong: #27a0cb;
+  --danger: #ff7e78;
+  --ok: #5be0b3;
+}
+
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(84, 198, 235, 0.2), transparent 26%),
+    radial-gradient(circle at 85% 0%, rgba(79, 116, 245, 0.24), transparent 23%),
+    linear-gradient(140deg, var(--bg-base), var(--bg-soft));
   min-height: 100vh;
-  color: #fff;
+  color: var(--text-main);
 }
 
 #root {
   min-height: 100vh;
+}
+
+.workspace-shell {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 22px;
+}
+
+.workspace-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+  animation: fade-slide 0.45s ease;
+}
+
+.workspace-kicker {
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.workspace-topbar h1 {
+  font-size: clamp(1.6rem, 2.4vw, 2.3rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.workspace-status {
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.workspace-status.ok {
+  color: #013120;
+  background: var(--ok);
+}
+
+.workspace-status.bad {
+  color: #340b0b;
+  background: var(--danger);
+}
+
+.workspace-nav {
+  display: inline-flex;
+  gap: 8px;
+  background: rgba(9, 15, 27, 0.72);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 8px;
+  margin-bottom: 20px;
+}
+
+.workspace-nav-button {
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-soft);
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.workspace-nav-button:hover {
+  color: var(--text-main);
+  background: rgba(84, 198, 235, 0.14);
+}
+
+.workspace-nav-button.active {
+  color: #031c29;
+  background: linear-gradient(120deg, var(--accent), #9de8ff);
+}
+
+.clean-dashboard {
+  animation: fade-slide 0.35s ease;
+}
+
+.clean-hero,
+.clean-metric-card {
+  border: 1px solid var(--card-border);
+  background: var(--card);
+  backdrop-filter: blur(6px);
+  border-radius: 18px;
+}
+
+.clean-hero {
+  padding: 24px;
+  margin-bottom: 18px;
+}
+
+.clean-hero h2 {
+  font-size: clamp(1.3rem, 1.8vw, 1.8rem);
+  margin-bottom: 8px;
+}
+
+.clean-hero p {
+  color: var(--text-soft);
+  max-width: 720px;
+  margin-bottom: 16px;
+}
+
+.clean-cta {
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(130deg, var(--accent), var(--accent-strong));
+  color: #031520;
+  font: inherit;
+  font-weight: 700;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.clean-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.clean-metric-card {
+  padding: 18px;
+}
+
+.clean-metric-card h3 {
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  margin-bottom: 6px;
+}
+
+.clean-metric-card p {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.metric-ok {
+  color: var(--ok);
+}
+
+.metric-bad {
+  color: var(--danger);
+}
+
+@keyframes fade-slide {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 960px) {
+  .workspace-shell {
+    padding: 14px;
+  }
+
+  .workspace-topbar {
+    flex-direction: column;
+  }
+
+  .workspace-status {
+    align-self: flex-start;
+  }
+
+  .workspace-nav {
+    width: 100%;
+  }
+
+  .workspace-nav-button {
+    flex: 1;
+    text-align: center;
+  }
+
+  .clean-metrics {
+    grid-template-columns: 1fr;
+  }
 }
 
 .app {

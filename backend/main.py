@@ -55,7 +55,7 @@ from simulation_service import (
     start_simulation as start_sim,
 )
 from abusive_words import detect_abusive_language
-from ollama_service import (
+from llm_service import (
     check_ollama_status,
     generate_call_summary,
     get_contextual_ai_response,
