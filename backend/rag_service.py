@@ -2,10 +2,10 @@
 RAG (Retrieval Augmented Generation) Service for AI Call Center.
 
 This module handles:
-  1. Embedding KB entries at startup
-  2. Embedding customer queries at call time
-  3. Retrieving top-K most relevant KB entries
-  4. Building a focused, grounded prompt for Ollama
+  1. Setting up the selected vector database (Chroma, Pinecone, or SQLite memory)
+  2. Embedding KB entries and indexing them in the vector DB at startup
+  3. Querying the vector database using query embeddings at call time
+  4. Building a focused, grounded prompt for the LLM
 """
 
 # pyright: reportMissingImports=false
@@ -16,29 +16,37 @@ import os
 import time
 import importlib
 from typing import List, Dict, Tuple, Optional, Any
-
 import numpy as np
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # ============================================================
-# GLOBAL STATE (module-level, loaded once at startup)
+# CONFIGURATION & GLOBAL STATE
 # ============================================================
-
-_embedder: Optional[Any] = None
-_kb_vectors: Optional[np.ndarray] = None  # shape: (N, 384)
-_kb_entries: List[Dict] = []  # the raw KB rows
-_model_name: str = "all-MiniLM-L6-v2"
-
-# Construct DB path relative to this module
 DB_PATH: str = os.path.join(os.path.dirname(__file__), "telecom_ai.db")
 
+VECTOR_DB_PROVIDER = os.getenv("VECTOR_DB_PROVIDER", "sqlite").lower()
+
+# Chroma Config
+CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", os.path.join(os.path.dirname(__file__), "chroma_db"))
+CHROMA_SERVER_HOST = os.getenv("CHROMA_SERVER_HOST", "")
+CHROMA_SERVER_PORT = os.getenv("CHROMA_SERVER_PORT", "8000")
+
+# Pinecone Config
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY", "")
+PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "telecom-kb")
+
+_embedder: Optional[Any] = None
+_model_name: str = os.getenv("EMBEDDING_MODEL_NAME", "all-MiniLM-L6-v2")
 
 # ============================================================
-# FUNCTION 1: load_embedder() -> SentenceTransformer
+# EMBEDDING HELPER
 # ============================================================
 def load_embedder() -> Any:
     """Load the sentence transformer model lazily (only once)."""
     global _embedder
-
     if _embedder is not None:
         return _embedder
 
@@ -53,16 +61,236 @@ def load_embedder() -> Any:
         raise
 
 
+def embed_text(text: str) -> np.ndarray:
+    """Embed a string and return normalized float vector."""
+    embedder = load_embedder()
+    vector = embedder.encode([text], show_progress_bar=False)[0]
+    # Normalize for cosine similarity
+    vector = vector / np.linalg.norm(vector)
+    return vector
+
+
 # ============================================================
-# FUNCTION 2: load_kb_into_memory(client_id: str = "telecorp") -> int
+# VECTOR DATABASE ADAPTERS
+# ============================================================
+class BaseVectorStore:
+    def initialize(self, client_id: str, kb_entries: List[Dict], embeddings: np.ndarray) -> None:
+        raise NotImplementedError
+
+    def search(self, query_vector: np.ndarray, top_k: int, min_score: float) -> List[Dict]:
+        raise NotImplementedError
+
+
+class SqliteVectorStore(BaseVectorStore):
+    """Fallback local in-memory NumPy vector search."""
+    def __init__(self):
+        self.kb_vectors: Optional[np.ndarray] = None
+        self.kb_entries: List[Dict] = []
+
+    def initialize(self, client_id: str, kb_entries: List[Dict], embeddings: np.ndarray) -> None:
+        self.kb_vectors = embeddings
+        self.kb_entries = kb_entries
+        print(f"RAG (SQLite/Memory): Loaded {len(kb_entries)} entries into local NumPy memory.")
+
+    def search(self, query_vector: np.ndarray, top_k: int, min_score: float) -> List[Dict]:
+        if self.kb_vectors is None or len(self.kb_entries) == 0:
+            return []
+
+        # Cosine similarity via dot product (vectors are normalized)
+        scores = np.dot(self.kb_vectors, query_vector)
+        top_indices = np.argsort(scores)[::-1][:top_k]
+
+        results = []
+        for idx in top_indices:
+            score = float(scores[idx])
+            if score >= min_score:
+                entry = dict(self.kb_entries[idx])
+                entry["relevance_score"] = round(score, 3)
+                results.append(entry)
+        return results
+
+
+class ChromaVectorStore(BaseVectorStore):
+    """Chroma DB adapter supporting local persistent path or remote server."""
+    def __init__(self):
+        self.client = None
+        self.collection = None
+
+    def initialize(self, client_id: str, kb_entries: List[Dict], embeddings: np.ndarray) -> None:
+        try:
+            chromadb = importlib.import_module("chromadb")
+        except ImportError:
+            print("ERROR: chromadb is not installed. Please run: pip install chromadb")
+            raise
+
+        if CHROMA_SERVER_HOST:
+            print(f"RAG (Chroma): Connecting to server at {CHROMA_SERVER_HOST}:{CHROMA_SERVER_PORT}...")
+            self.client = chromadb.HttpClient(host=CHROMA_SERVER_HOST, port=CHROMA_SERVER_PORT)
+        else:
+            print(f"RAG (Chroma): Initializing persistent local DB at {CHROMA_DB_PATH}...")
+            self.client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+
+        collection_name = f"kb_{client_id}".replace("-", "_")
+        # Delete if exists to refresh, or get/create
+        try:
+            self.client.delete_collection(name=collection_name)
+        except Exception:
+            pass
+
+        self.collection = self.client.create_collection(
+            name=collection_name,
+            metadata={"hnsw:space": "cosine"}
+        )
+
+        ids = [str(entry["id"]) for entry in kb_entries]
+        documents = [f"{entry.get('question', '')} {entry.get('answer', '')} {entry.get('keywords') or ''}" for entry in kb_entries]
+        metadatas = []
+        for entry in kb_entries:
+            metadatas.append({
+                "intent_id": entry.get("intent_id") or "",
+                "category": entry.get("category") or "",
+                "question": entry.get("question") or "",
+                "answer": entry.get("answer") or "",
+                "keywords": entry.get("keywords") or "",
+            })
+
+        # Chroma handles embeddings list conversion
+        self.collection.add(
+            ids=ids,
+            embeddings=embeddings.tolist(),
+            documents=documents,
+            metadatas=metadatas
+        )
+        print(f"RAG (Chroma): Successfully indexed {len(kb_entries)} entries in collection '{collection_name}'")
+
+    def search(self, query_vector: np.ndarray, top_k: int, min_score: float) -> List[Dict]:
+        if not self.collection:
+            return []
+
+        results = self.collection.query(
+            query_embeddings=[query_vector.tolist()],
+            n_results=top_k
+        )
+
+        search_results = []
+        if not results or "ids" not in results or not results["ids"]:
+            return []
+
+        ids = results["ids"][0]
+        distances = results["distances"][0] if "distances" in results else [0.0] * len(ids)
+        metadatas = results["metadatas"][0] if "metadatas" in results else [{}] * len(ids)
+
+        for i in range(len(ids)):
+            # Cosine similarity score = 1 - cosine distance (depending on Chroma configuration)
+            # In Chroma with space 'cosine', distance is 1 - similarity. So similarity is 1 - distance.
+            score = 1.0 - float(distances[i])
+            if score >= min_score:
+                meta = metadatas[i]
+                search_results.append({
+                    "id": ids[i],
+                    "intent_id": meta.get("intent_id"),
+                    "category": meta.get("category"),
+                    "question": meta.get("question"),
+                    "answer": meta.get("answer"),
+                    "keywords": meta.get("keywords"),
+                    "relevance_score": round(score, 3)
+                })
+        return search_results
+
+
+class PineconeVectorStore(BaseVectorStore):
+    """Pinecone DB adapter for cloud-based deployment."""
+    def __init__(self):
+        self.index = None
+
+    def initialize(self, client_id: str, kb_entries: List[Dict], embeddings: np.ndarray) -> None:
+        if not PINECONE_API_KEY or not PINECONE_INDEX_NAME:
+            raise ValueError("PINECONE_API_KEY and PINECONE_INDEX_NAME must be set in .env for Pinecone provider.")
+
+        try:
+            pinecone = importlib.import_module("pinecone")
+            Pinecone = getattr(pinecone, "Pinecone")
+        except ImportError:
+            print("ERROR: pinecone-client is not installed. Please run: pip install pinecone-client")
+            raise
+
+        pc = Pinecone(api_key=PINECONE_API_KEY)
+        print(f"RAG (Pinecone): Connecting to index '{PINECONE_INDEX_NAME}'...")
+        self.index = pc.Index(PINECONE_INDEX_NAME)
+
+        # Upsert in batches
+        vectors_to_upsert = []
+        for i, entry in enumerate(kb_entries):
+            metadata = {
+                "client_id": client_id,
+                "intent_id": entry.get("intent_id") or "",
+                "category": entry.get("category") or "",
+                "question": entry.get("question") or "",
+                "answer": entry.get("answer") or "",
+                "keywords": entry.get("keywords") or "",
+            }
+            vectors_to_upsert.append((
+                str(entry["id"]),
+                embeddings[i].tolist(),
+                metadata
+            ))
+
+        # Chunk upserts to prevent payload limit overflow
+        chunk_size = 100
+        for i in range(0, len(vectors_to_upsert), chunk_size):
+            chunk = vectors_to_upsert[i:i + chunk_size]
+            self.index.upsert(vectors=chunk)
+
+        print(f"RAG (Pinecone): Upserted {len(kb_entries)} vector embeddings.")
+
+    def search(self, query_vector: np.ndarray, top_k: int, min_score: float) -> List[Dict]:
+        if not self.index:
+            return []
+
+        response = self.index.query(
+            vector=query_vector.tolist(),
+            top_k=top_k,
+            include_metadata=True
+        )
+
+        results = []
+        for match in response.get("matches", []):
+            score = float(match.get("score", 0.0))
+            if score >= min_score:
+                meta = match.get("metadata", {})
+                results.append({
+                    "id": match.get("id"),
+                    "intent_id": meta.get("intent_id"),
+                    "category": meta.get("category"),
+                    "question": meta.get("question"),
+                    "answer": meta.get("answer"),
+                    "keywords": meta.get("keywords"),
+                    "relevance_score": round(score, 3)
+                })
+        return results
+
+
+# ============================================================
+# ACTIVE VECTOR STORE INSTANCE SELECTOR
+# ============================================================
+_vector_store: BaseVectorStore = SqliteVectorStore()
+
+if VECTOR_DB_PROVIDER == "chroma":
+    _vector_store = ChromaVectorStore()
+elif VECTOR_DB_PROVIDER == "pinecone":
+    _vector_store = PineconeVectorStore()
+else:
+    _vector_store = SqliteVectorStore()
+
+
+# ============================================================
+# PUBLIC INTERFACE METHODS
 # ============================================================
 def load_kb_into_memory(client_id: str = "telecorp") -> int:
     """
-    Load all KB entries for a client from the database into memory
-    and pre-compute their embeddings as a numpy matrix.
+    Load all KB entries for a client from the database, pre-compute
+    embeddings, and initialize the active Vector Store provider.
     """
-    global _kb_vectors, _kb_entries
-
     try:
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
@@ -95,12 +323,10 @@ def load_kb_into_memory(client_id: str = "telecorp") -> int:
             print(f"RAG: Warning — no KB entries found in {table_name}")
             return 0
 
-        # Build searchable strings (question + answer + keywords)
         searchable_texts = []
         kb_entries_list = []
 
         for row in rows:
-            # Convert sqlite3.Row to dict
             entry_dict = dict(row)
             kb_entries_list.append(entry_dict)
 
@@ -108,94 +334,49 @@ def load_kb_into_memory(client_id: str = "telecorp") -> int:
             question = entry_dict.get("question", "")
             answer = entry_dict.get("answer", "")
             keywords = entry_dict.get("keywords") or ""
-
             searchable = f"{question} {answer} {keywords}"
             searchable_texts.append(searchable)
 
-        # Load embedder and encode all texts
+        # Load embedding model and encode all texts
         embedder = load_embedder()
-        print(f"RAG: encoding {len(searchable_texts)} KB entries...")
+        print(f"RAG: encoding {len(searchable_texts)} KB entries using {VECTOR_DB_PROVIDER}...")
         vectors = embedder.encode(
             searchable_texts, batch_size=32, show_progress_bar=False
         )
 
-        # Normalise each row for cosine similarity via dot product
+        # Normalize vectors for cosine similarity
         vectors = vectors / np.linalg.norm(vectors, axis=1, keepdims=True)
 
-        # Assign to globals
-        _kb_vectors = vectors
-        _kb_entries = kb_entries_list
+        # Initialize selected Vector Database Store
+        _vector_store.initialize(client_id, kb_entries_list, vectors)
 
-        print(f"RAG: {len(kb_entries_list)} KB entries embedded for {client_id}")
         return len(kb_entries_list)
 
     except Exception as e:
-        print(f"RAG: Error loading KB: {e}")
-        return 0
+        print(f"RAG: Error loading and indexing KB: {e}")
+        # Fallback to local numpy implementation if initialization fails
+        print("RAG: Falling back to Local SQLite Memory storage...")
+        fallback_store = SqliteVectorStore()
+        try:
+            fallback_store.initialize(client_id, kb_entries_list, vectors)
+            globals()["_vector_store"] = fallback_store
+            return len(kb_entries_list)
+        except Exception:
+            return 0
 
 
-# ============================================================
-# FUNCTION 3: embed_query(text: str) -> np.ndarray
-# ============================================================
-def embed_query(text: str) -> np.ndarray:
+def retrieve_kb(query: str, top_k: int = 3, min_score: float = 0.25) -> List[Dict]:
     """
-    Embed a single query string and return normalised 384-dim vector.
+    Retrieve top_k most relevant KB entries using the active Vector Database.
     """
-    embedder = load_embedder()
-    vector = embedder.encode([text], show_progress_bar=False)[0]
-
-    # Normalise
-    vector = vector / np.linalg.norm(vector)
-
-    return vector
-
-
-# ============================================================
-# FUNCTION 4: retrieve_kb(
-#     query: str,
-#     top_k: int = 3,
-#     min_score: float = 0.25
-# ) -> List[Dict]
-# ============================================================
-def retrieve_kb(
-    query: str, top_k: int = 3, min_score: float = 0.25
-) -> List[Dict]:
-    """
-    Core RAG retrieval: find the top_k most relevant KB entries
-    using cosine similarity.
-    """
-    if _kb_vectors is None or len(_kb_entries) == 0:
+    try:
+        query_vec = embed_text(query)
+        return _vector_store.search(query_vec, top_k, min_score)
+    except Exception as e:
+        print(f"RAG: Query search failed: {e}")
         return []
 
-    # Embed query
-    query_vec = embed_query(query)
 
-    # Compute cosine similarities
-    scores = np.dot(_kb_vectors, query_vec)
-
-    # Get top indices
-    top_indices = np.argsort(scores)[::-1][:top_k]
-
-    # Build results
-    results = []
-    for idx in top_indices:
-        score = float(scores[idx])
-        if score >= min_score:
-            entry = dict(_kb_entries[idx])
-            entry["relevance_score"] = round(score, 3)
-            results.append(entry)
-
-    return results
-
-
-# ============================================================
-# FUNCTION 5: build_rag_prompt(
-#     customer_message: str,
-#     customer: Optional[Dict],
-#     conversation_history: List[Dict],
-#     client_id: str = "telecorp"
-# ) -> Tuple[str, List[Dict]]
-# ============================================================
 def build_rag_prompt(
     customer_message: str,
     customer: Optional[Dict],
@@ -203,10 +384,9 @@ def build_rag_prompt(
     client_id: str = "telecorp",
 ) -> Tuple[str, List[Dict]]:
     """
-    Build the complete, grounded prompt for Ollama using RAG results.
+    Build the complete, grounded prompt for the LLM using RAG results.
     Returns (prompt_string, retrieved_kb_entries)
     """
-
     # A. Retrieve relevant KB entries
     retrieved = retrieve_kb(customer_message, top_k=3)
 
@@ -220,7 +400,7 @@ def build_rag_prompt(
     else:
         kb_context = "No specific resolution found. Use general best practices."
 
-    # C. Build detailed customer context block (CRITICAL FOR AVOIDING REPEATED QUESTIONS)
+    # C. Build detailed customer context block
     if customer:
         full_name = customer.get("full_name", "Unknown")
         phone = customer.get("phone", "Unknown")
@@ -289,16 +469,9 @@ Customer: {customer_message}
 
 Sarah (2-3 sentences, specific, no apologies for delays):"""
 
-    # F. Return prompt and retrieved entries
     return (prompt, retrieved)
 
 
-# ============================================================
-# FUNCTION 6: get_rag_context_for_display(
-#     query: str,
-#     top_k: int = 3
-# ) -> List[Dict]
-# ============================================================
 def get_rag_context_for_display(query: str, top_k: int = 3) -> List[Dict]:
     """
     Returns RAG results formatted for the frontend intelligence panel.
@@ -324,34 +497,25 @@ def get_rag_context_for_display(query: str, top_k: int = 3) -> List[Dict]:
     return display_results
 
 
-# ============================================================
-# FUNCTION 7: warmup_rag(client_id: str = "telecorp") -> bool
-# ============================================================
 def warmup_rag(client_id: str = "telecorp") -> bool:
     """
     Called at FastAPI startup.
     Returns True if RAG is ready, False otherwise.
     """
     try:
-        # Load KB into memory
         n = load_kb_into_memory(client_id)
-
         if n == 0:
             print("RAG: No KB entries loaded. Check seed.py has been run.")
             return False
 
         # Test with dummy query
         results = retrieve_kb("billing problem", top_k=1)
-
         if results:
-            print("RAG: Ready.")
+            print(f"RAG System Warmup Succeeded using provider '{VECTOR_DB_PROVIDER}'.")
             return True
         else:
-            print(
-                "RAG: Loaded but returned no results. Check seed.py has been run."
-            )
+            print("RAG: Loaded but returned no results. Check seed.py has been run.")
             return False
-
     except Exception as e:
         print(f"RAG: Error during warmup: {e}")
         return False
@@ -361,8 +525,9 @@ def warmup_rag(client_id: str = "telecorp") -> bool:
 # TEST SCRIPT
 # ============================================================
 if __name__ == "__main__":
-    print("=== Testing RAG Service ===\n")
+    print(f"=== Testing RAG Service with provider: {VECTOR_DB_PROVIDER} ===\n")
 
+    # Force SQLite/numpy for test script run if dependencies aren't ready
     n = load_kb_into_memory("telecorp")
     print(f"Loaded {n} entries\n")
 
@@ -370,11 +535,6 @@ if __name__ == "__main__":
         "why was I charged twice",
         "no signal at home",
         "I want to cancel and switch to BT",
-        "my router keeps disconnecting",
-        "I can't afford my bill this month",
-        "I lost my SIM card",
-        "I want to upgrade to unlimited data",
-        "when does my contract end",
     ]
 
     for q in test_queries:
@@ -385,8 +545,8 @@ if __name__ == "__main__":
                 intent = r.get("intent_id", "unknown")
                 score = r.get("relevance_score", 0)
                 answer_preview = r.get("answer", "")[:80]
-                print(f"  → {intent} (score: {score})")
+                print(f"  -> {intent} (score: {score})")
                 print(f"     {answer_preview}...")
         else:
-            print("  → No results found")
+            print("  -> No results found")
         print()
